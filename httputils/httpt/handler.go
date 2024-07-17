@@ -51,6 +51,9 @@ func (s *HandlerTesting) Run(t *testing.T) {
 	a := s.attrs
 	t.Run(a.Name, func(t *testing.T) {
 		r := a.TestingRequest(t)
+		if r == nil {
+			t.Error("the testing request is nil")
+		}
 		w := httptest.NewRecorder()
 		s.h.ServeHTTP(w, r)
 
