@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	jwtkey string
+	jwtkey   string
+	mongoURI string
 )
 
 var once sync.Once
@@ -17,12 +18,24 @@ var once sync.Once
 // required one is missing.
 func Load() {
 	once.Do(func() {
-		if jwtkey = GetJWTKey(); jwtkey == "" {
-			fmts.Panicf("'JWT_KEY' env is required")
+		if jwtkey = JWTKey(); jwtkey == "" {
+			panicEnv("JWT_KEY")
 		}
+		if mongoURI = MongoURI(); mongoURI == "" {
+			panicEnv("MONGO_URI")
+		}
+
 	})
 }
 
-func GetJWTKey() string {
+func panicEnv(envName string) {
+	fmts.Panicf("'%s', env. is required", envName)
+}
+
+func JWTKey() string {
 	return os.Getenv("JWT_KEY")
+}
+
+func MongoURI() string {
+	return os.Getenv("MONGO_URI")
 }

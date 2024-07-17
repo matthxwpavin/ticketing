@@ -55,7 +55,7 @@ type Token struct {
 }
 
 func (s *Token) SignByENVKey() (string, error) {
-	return s.t.SignedString([]byte(env.GetJWTKey()))
+	return s.t.SignedString([]byte(env.JWTKey()))
 }
 
 func HS256WithClaims(claims jwt.Claims) *Token {
@@ -64,7 +64,7 @@ func HS256WithClaims(claims jwt.Claims) *Token {
 
 func HS256ParseByENVKey(jwtStr string) (*CustomClaims, error) {
 	_, err := jwt.Parse(jwtStr, func(t *jwt.Token) (interface{}, error) {
-		return []byte(env.GetJWTKey()), nil
+		return []byte(env.JWTKey()), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	if err != nil {
 		return nil, err
