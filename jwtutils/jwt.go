@@ -19,7 +19,7 @@ func WithClaims(parent context.Context, claims *CustomClaims) context.Context {
 	return context.WithValue(parent, jwtKey, claims)
 }
 
-func FromContext(ctx context.Context) *CustomClaims {
+func ClaimsFromContext(ctx context.Context) *CustomClaims {
 	claims, _ := ctx.Value(jwtKey).(*CustomClaims)
 	return claims
 }

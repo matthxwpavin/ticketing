@@ -7,14 +7,17 @@ import (
 const JWTCookieName = "ticketing-jwt"
 
 func SetJWTCookie(w http.ResponseWriter, jwt string) {
-	cookie := &http.Cookie{
+	http.SetCookie(w, NewJWTCookie(jwt))
+}
+
+func NewJWTCookie(jwt string) *http.Cookie {
+	return &http.Cookie{
 		Name:     JWTCookieName,
 		Value:    jwt,
 		Path:     "/",
 		Secure:   true,
 		HttpOnly: true,
 	}
-	http.SetCookie(w, cookie)
 }
 
 func DeleteJWTCookie(w http.ResponseWriter) {

@@ -1,5 +1,12 @@
 package service
 
+import "github.com/matthxwpavin/ticketing/validator"
+
+const (
+	ErrTypeNameInvalidParameter = "invalid_parameter"
+	ErrTypeNameServiceFailure   = "service_failure"
+)
+
 type CustomError struct {
 	Type string `json:"type"`
 	Msg  string `json:"message"`
@@ -34,3 +41,12 @@ var ErrUnauthorized = &UnauthorizedError{CustomError{
 	Type: "unauthorized",
 	Msg:  "Unauthorized",
 }}
+
+func HandleValidateError(err error) error {
+	switch err.(type) {
+	case validator.ValidationErrors:
+		return NewInvalidParameterError("Invalid Parameters", err)
+	default:
+		return NewServiceFailureError("Validation Failed", "")
+	}
+}

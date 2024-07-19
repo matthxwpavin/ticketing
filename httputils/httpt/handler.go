@@ -23,8 +23,9 @@ type AfterFunc func(t *testing.T, r *http.Response)
 
 type TestingAttributes struct {
 	Name           string
-	TestingRequest func(t *testing.T) *http.Request
+	TestingRequest func(*testing.T) *http.Request
 	StatusCode     int
+	StatusCodeFunc func(statusCode int) bool
 }
 
 type HandlerPrepared struct {
@@ -52,16 +53,21 @@ func (s *HandlerTesting) Run(t *testing.T) {
 	t.Run(a.Name, func(t *testing.T) {
 		r := a.TestingRequest(t)
 		if r == nil {
-			t.Error("the testing request is nil")
+			t.Fatal("the testing request is nil")
 		}
+
 		w := httptest.NewRecorder()
 		s.h.ServeHTTP(w, r)
 
 		rs := w.Result()
-		if rs.StatusCode != a.StatusCode {
-			t.Errorf(
+		if a.StatusCodeFunc != nil {
+			if !a.StatusCodeFunc(rs.StatusCode) {
+				t.Fatalf("status code func returns false, expected: %v", rs.StatusCode)
+			}
+		} else if rs.StatusCode != 0 && rs.StatusCode != a.StatusCode {
+			t.Fatalf(
 				"status code is unexpected, expected: %v, received: %v",
-				http.StatusCreated,
+				a.StatusCode,
 				rs.StatusCode,
 			)
 		}

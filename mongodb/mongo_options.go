@@ -9,7 +9,10 @@ type Schema struct {
 	Properties map[string]Property `structs:"properties"`
 }
 
-const BSONStringType = "string"
+const (
+	BSONTypeString = "string"
+	BSONTypeDouble = "double"
+)
 
 type Property struct {
 	BSONType    string `structs:"bsonType"`
