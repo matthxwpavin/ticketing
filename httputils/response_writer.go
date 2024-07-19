@@ -49,7 +49,10 @@ func Error(ctx context.Context, w http.ResponseWriter, err error) {
 	case *service.UnauthorizedError:
 		JSON401(ctx, w, err)
 	default:
-		w.WriteHeader(400)
+		JSON400(ctx, w, &service.CustomError{
+			Type: "unknown",
+			Msg:  "Something went wrong",
+		})
 	}
 }
 

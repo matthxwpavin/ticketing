@@ -17,11 +17,11 @@ func (s *CustomError) Error() string {
 	return s.Msg
 }
 
-func NewInvalidParameterError(msg string, val any) *CustomError {
+func NewInvalidParameterError(msg string, err validator.ValidationErrors) *CustomError {
 	return &CustomError{
 		Type: "invalid_parameter",
 		Msg:  msg,
-		Val:  val,
+		Val:  err,
 	}
 }
 
@@ -43,9 +43,9 @@ var ErrUnauthorized = &UnauthorizedError{CustomError{
 }}
 
 func HandleValidateError(err error) error {
-	switch err.(type) {
+	switch v := err.(type) {
 	case validator.ValidationErrors:
-		return NewInvalidParameterError("Invalid Parameters", err)
+		return NewInvalidParameterError("Invalid Parameters", v)
 	default:
 		return NewServiceFailureError("Validation Failed", "")
 	}
