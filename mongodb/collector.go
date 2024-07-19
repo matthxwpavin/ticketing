@@ -2,34 +2,63 @@ package mongodb
 
 import (
 	"context"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type Collector[DOCTYPE any] struct {
+type Doctype interface {
+	SetUpdatedAt(t time.Time)
+}
+
+type Collector[T Doctype] struct {
 	*mongo.Collection
 }
 
-func (c *Collector[DOCTYPE]) FindOne(
+func (c *Collector[Doctype]) FindOne(
 	ctx context.Context,
 	filter interface{},
 	opts ...*options.FindOneOptions,
-) *SingleResult[DOCTYPE] {
-	return &SingleResult[DOCTYPE]{SingleResult: c.Collection.FindOne(ctx, filter, opts...)}
+) *SingleResult[Doctype] {
+	return &SingleResult[Doctype]{SingleResult: c.Collection.FindOne(ctx, filter, opts...)}
 }
 
-func (c *Collector[DOCTYPE]) InsertOne(
+func (c *Collector[Doctype]) InsertOne(
 	ctx context.Context,
-	document interface{},
+	document *Doctype,
 	opts ...*options.InsertOneOptions,
 ) error {
 	_, err := c.Collection.InsertOne(ctx, document, opts...)
 	return err
 }
 
-type SingleResult[DOCTYPE any] struct {
+func (c *Collector[Doctype]) UpdateByID(
+	ctx context.Context,
+	hexID string,
+	update *Doctype,
+	opts ...*options.UpdateOptions,
+) (*mongo.UpdateResult, error) {
+	oid, err := primitive.ObjectIDFromHex(hexID)
+	if err != nil {
+		return nil, err
+	}
+	(*update).SetUpdatedAt(time.Now())
+	return c.Collection.UpdateByID(ctx, oid, bson.D{{"$set", update}})
+}
+
+func (c *Collection[Doctype]) DeleteByID(ctx context.Context, hexID string) error {
+	oid, err := primitive.ObjectIDFromHex(hexID)
+	if err != nil {
+		return err
+	}
+	_, err = c.Collection.DeleteOne(ctx, bson.D{{"_id", oid}})
+	return err
+}
+
+type SingleResult[T Doctype] struct {
 	*mongo.SingleResult
 }
 
@@ -37,8 +66,8 @@ func (r *SingleResult[_]) Err() error {
 	return r.handleError(r.SingleResult.Err())
 }
 
-func (r *SingleResult[DOCTYPE]) Decode() (*DOCTYPE, error) {
-	doc := new(DOCTYPE)
+func (r *SingleResult[Doctype]) Decode() (*Doctype, error) {
+	doc := new(Doctype)
 	err := r.SingleResult.Decode(doc)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
