@@ -1,6 +1,11 @@
 package service
 
-import "github.com/matthxwpavin/ticketing/validator"
+import (
+	"context"
+
+	"github.com/matthxwpavin/ticketing/jwtutils"
+	"github.com/matthxwpavin/ticketing/validator"
+)
 
 const (
 	ErrTypeNameInvalidParameter = "invalid_parameter"
@@ -41,6 +46,13 @@ var ErrUnauthorized = &UnauthorizedError{CustomError{
 	Type: "unauthorized",
 	Msg:  "Unauthorized",
 }}
+
+func IsAuthorized(ctx context.Context) (*jwtutils.CustomClaims, error) {
+	if claims := jwtutils.ClaimsFromContext(ctx); claims != nil {
+		return claims, nil
+	}
+	return nil, ErrUnauthorized
+}
 
 func HandleValidateError(err error) error {
 	switch v := err.(type) {
