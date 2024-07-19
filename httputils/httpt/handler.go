@@ -64,7 +64,7 @@ func (s *HandlerTesting) Run(t *testing.T) {
 			if !a.StatusCodeFunc(rs.StatusCode) {
 				t.Fatalf("status code func returns false, expected: %v", rs.StatusCode)
 			}
-		} else if rs.StatusCode != 0 && rs.StatusCode != a.StatusCode {
+		} else if a.StatusCode != 0 && rs.StatusCode != a.StatusCode {
 			t.Fatalf(
 				"status code is unexpected, expected: %v, received: %v",
 				a.StatusCode,
