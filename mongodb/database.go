@@ -38,7 +38,7 @@ func Connect(ctx context.Context, uri string, databaseName string) (*mongo.Datab
 }
 
 func ConnTimeoutContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 10*time.Second)
+	return context.WithTimeout(context.Background(), 15*time.Second)
 }
 
 type DisconnectFunc func(context.Context) error
@@ -62,10 +62,10 @@ func Migrate(ctx context.Context, db *mongo.Database, opts []*MigrationOptions) 
 	}
 }
 
-type Collection[T any] struct {
+type Collection[T Doctype] struct {
 	*Collector[T]
 }
 
-func NewCollection[T any](db *mongo.Database, collectionName string) *Collection[T] {
+func NewCollection[T Doctype](db *mongo.Database, collectionName string) *Collection[T] {
 	return &Collection[T]{&Collector[T]{Collection: db.Collection(collectionName)}}
 }
