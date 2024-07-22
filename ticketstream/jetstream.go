@@ -14,11 +14,23 @@ type JetStream struct {
 }
 
 func Default() (*JetStream, error) {
+	return Connect(nats.DefaultURL)
+}
+
+func Connect(url string) (*JetStream, error) {
 	nc, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
 		return nil, err
 	}
 
+	return new(nc)
+}
+
+func From(nc *nats.Conn) (*JetStream, error) {
+	return new(nc)
+}
+
+func new(nc *nats.Conn) (*JetStream, error) {
 	js, err := jetstream.New(nc)
 	if err != nil {
 		return nil, err

@@ -16,8 +16,8 @@ type JetStream struct {
 	*ticketstream.JetStream
 }
 
-func NewJetStream() (*JetStream, error) {
-	js, err := ticketstream.Default()
+func NewJetStream(connectUrl string) (*JetStream, error) {
+	js, err := ticketstream.Connect(connectUrl)
 	if err != nil {
 		return nil, err
 	}

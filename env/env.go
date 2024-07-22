@@ -7,10 +7,13 @@ import (
 	"github.com/matthxwpavin/ticketing/fmts"
 )
 
-var (
-	jwtkey   string
+type Env struct {
+	jwtKey   string
 	mongoURI string
-)
+	natsURL  string
+}
+
+var env *Env
 
 var once sync.Once
 
@@ -18,14 +21,37 @@ var once sync.Once
 // required one is missing.
 func Load() {
 	once.Do(func() {
-		if jwtkey = JWTKey(); jwtkey == "" {
-			panicEnv("JWT_KEY")
-		}
-		if mongoURI = MongoURI(); mongoURI == "" {
-			panicEnv("MONGO_URI")
-		}
+		env := &Env{}
 
+		for _, load := range []func(*Env){
+			loadJWTKey,
+			loadMongoURI,
+			loadNatsURL,
+		} {
+			load(env)
+		}
 	})
+}
+
+func loadJWTKey(env *Env) {
+	const key = "JWT_KEY"
+	if env.jwtKey = os.Getenv(key); env.jwtKey == "" {
+		panicEnv(key)
+	}
+}
+
+func loadMongoURI(env *Env) {
+	const key = "MONGO_URI"
+	if env.mongoURI = os.Getenv(key); env.mongoURI == "" {
+		panicEnv(key)
+	}
+}
+
+func loadNatsURL(env *Env) {
+	const key = "NATS_URL"
+	if env.natsURL = os.Getenv(key); env.natsURL == "" {
+		panicEnv(key)
+	}
 }
 
 func panicEnv(envName string) {
@@ -33,9 +59,13 @@ func panicEnv(envName string) {
 }
 
 func JWTKey() string {
-	return os.Getenv("JWT_KEY")
+	return env.jwtKey
 }
 
 func MongoURI() string {
-	return os.Getenv("MONGO_URI")
+	return env.mongoURI
+}
+
+func NatsURL() string {
+	return env.natsURL
 }
