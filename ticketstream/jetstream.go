@@ -18,7 +18,7 @@ func Default() (*JetStream, error) {
 }
 
 func Connect(url string) (*JetStream, error) {
-	nc, err := nats.Connect(nats.DefaultURL)
+	nc, err := nats.Connect(url)
 	if err != nil {
 		return nil, err
 	}
