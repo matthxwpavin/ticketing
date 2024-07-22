@@ -21,7 +21,7 @@ var once sync.Once
 // required one is missing.
 func Load() {
 	once.Do(func() {
-		env := &Env{}
+		env = &Env{}
 
 		for _, load := range []func(*Env){
 			loadJWTKey,
