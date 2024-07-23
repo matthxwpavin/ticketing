@@ -38,23 +38,23 @@ func new(nc *nats.Conn) (*JetStream, error) {
 	return &JetStream{nc: nc, js: js}, nil
 }
 
-func (s *JetStream) GetStreamOrCreate(ctx context.Context, name string, subjects []string) (jetstream.Stream, error) {
-	stream, err := s.js.Stream(context.Background(), name)
+func (s *JetStream) CreateStreamIfNotExists(ctx context.Context, name string, subjects []string) error {
+	_, err := s.js.Stream(context.Background(), name)
 	if err == nil {
-		return stream, nil
+		return nil
 	}
 	if err == jetstream.ErrStreamNotFound {
-		stream, err := s.js.CreateStream(ctx, jetstream.StreamConfig{
+		_, err := s.js.CreateStream(ctx, jetstream.StreamConfig{
 			Name:      name,
 			Subjects:  subjects,
 			Retention: jetstream.WorkQueuePolicy,
 		})
 		if err != nil {
-			return nil, err
+			return err
 		}
-		return stream, nil
+		return nil
 	}
-	return nil, err
+	return err
 }
 
 func (s *JetStream) GetConsumerOrCreate(ctx context.Context, name string, stream string) (jetstream.Consumer, error) {
