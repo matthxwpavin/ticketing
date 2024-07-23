@@ -33,6 +33,10 @@ func From(nc *nats.Conn) (*JetStream, error) {
 	return &JetStream{JetStream: js}, nil
 }
 
+func (s *JetStream) CreateStreamIfNotExists(ctx context.Context) error {
+	return s.JetStream.CreateStreamIfNotExists(ctx, stream, []string{subject})
+}
+
 func (s *JetStream) GetConsumerOrCreate(ctx context.Context) (ticketstream.Consumer, error) {
 	return s.JetStream.GetConsumerOrCreate(ctx, consumer, stream)
 }

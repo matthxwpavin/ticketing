@@ -37,6 +37,10 @@ func (s *JetStream) GetConsumerOrCreate(ctx context.Context) (ticketstream.Consu
 	return s.JetStream.GetConsumerOrCreate(ctx, consumer, stream)
 }
 
+func (s *JetStream) CreateStreamIfNotExists(ctx context.Context) error {
+	return s.JetStream.CreateStreamIfNotExists(ctx, stream, []string{subject})
+}
+
 type Message struct {
 	TicketID      string  `json:"ticketID"`
 	TicketTitle   string  `json:"ticketTitle"`
