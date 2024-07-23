@@ -17,17 +17,24 @@ type JetStream struct {
 	*ticketstream.JetStream
 }
 
-func NewJetStream(connectUrl string) (*JetStream, error) {
-	js, err := ticketstream.Connect(connectUrl)
+func NewJetStream(ctx context.Context, connectUrl string) (*JetStream, error) {
+	nc, err := nats.Connect(connectUrl)
 	if err != nil {
 		return nil, err
 	}
-	return &JetStream{JetStream: js}, nil
+	return new(ctx, nc)
 }
 
-func From(nc *nats.Conn) (*JetStream, error) {
+func From(ctx context.Context, nc *nats.Conn) (*JetStream, error) {
+	return new(ctx, nc)
+}
+
+func new(ctx context.Context, nc *nats.Conn) (*JetStream, error) {
 	js, err := ticketstream.From(nc)
 	if err != nil {
+		return nil, err
+	}
+	if err := js.CreateStreamIfNotExists(ctx, stream, []string{subject}); err != nil {
 		return nil, err
 	}
 	return &JetStream{JetStream: js}, nil
@@ -35,10 +42,6 @@ func From(nc *nats.Conn) (*JetStream, error) {
 
 func (s *JetStream) GetConsumerOrCreate(ctx context.Context) (ticketstream.Consumer, error) {
 	return s.JetStream.GetConsumerOrCreate(ctx, consumer, stream)
-}
-
-func (s *JetStream) CreateStreamIfNotExists(ctx context.Context) error {
-	return s.JetStream.CreateStreamIfNotExists(ctx, stream, []string{subject})
 }
 
 type Message struct {
