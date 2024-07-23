@@ -38,14 +38,6 @@ func new(nc *nats.Conn) (*JetStream, error) {
 	return &JetStream{nc: nc, js: js}, nil
 }
 
-func (s *JetStream) DrainAndClose() error {
-	if err := s.nc.Drain(); err != nil {
-		return err
-	}
-	s.nc.Close()
-	return nil
-}
-
 func (s *JetStream) GetStreamOrCreate(ctx context.Context, name string, subjects []string) (jetstream.Stream, error) {
 	stream, err := s.js.Stream(context.Background(), name)
 	if err == nil {

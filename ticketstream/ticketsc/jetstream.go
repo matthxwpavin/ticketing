@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/matthxwpavin/ticketing/ticketstream"
+	"github.com/nats-io/nats.go"
 )
 
 const stream = "tickets:created"
@@ -18,6 +19,14 @@ type JetStream struct {
 
 func NewJetStream(connectUrl string) (*JetStream, error) {
 	js, err := ticketstream.Connect(connectUrl)
+	if err != nil {
+		return nil, err
+	}
+	return &JetStream{JetStream: js}, nil
+}
+
+func From(nc *nats.Conn) (*JetStream, error) {
+	js, err := ticketstream.From(nc)
 	if err != nil {
 		return nil, err
 	}
