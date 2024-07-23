@@ -1,4 +1,4 @@
-package ticketstream
+package jetstream
 
 import (
 	"context"

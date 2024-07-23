@@ -1,17 +1,22 @@
-package ticketsc
+package ticketsu
 
 import (
 	"context"
 
-	"github.com/matthxwpavin/ticketing/ticketstream"
+	ticketstream "github.com/matthxwpavin/ticketing/jetstream"
+	"github.com/matthxwpavin/ticketing/streaming/ticketsu"
 	"github.com/nats-io/nats.go"
 )
 
-const stream = "tickets:created"
+type Publisher interface {
+	Publish(context.Context, *ticketsu.Message) error
+}
 
-const subject = "tickets:created"
+const stream = "tickets:updated"
 
-const consumer = "ticketsc"
+const subject = "tickets:updated"
+
+const consumer = "ticketsu"
 
 type JetStream struct {
 	*ticketstream.JetStream
@@ -44,14 +49,6 @@ func (s *JetStream) GetConsumerOrCreate(ctx context.Context) (ticketstream.Consu
 	return s.JetStream.GetConsumerOrCreate(ctx, consumer, stream)
 }
 
-type Message struct {
-	TicketID      string  `json:"ticketID"`
-	TicketTitle   string  `json:"ticketTitle"`
-	TicketPrice   float64 `json:"ticketPrice"`
-	UserID        string  `json:"userID"`
-	TicketVersion int     `json:"ticketVersion"`
-}
-
-func (s *JetStream) Publish(ctx context.Context, message *Message) error {
+func (s *JetStream) Publish(ctx context.Context, message *ticketsu.Message) error {
 	return s.JetStream.PublishJSON(ctx, subject, message)
 }
