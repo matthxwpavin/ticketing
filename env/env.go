@@ -1,10 +1,9 @@
 package env
 
 import (
+	"fmt"
 	"os"
 	"sync"
-
-	"github.com/matthxwpavin/ticketing/fmts"
 )
 
 type Env struct {
@@ -16,33 +15,37 @@ type Env struct {
 
 var env Env
 
+var envMap = map[string]*string{
+	"JWT_KEY":        &env.jwtKey,
+	"MONGO_URI":      &env.mongoURI,
+	"NATS_URL":       &env.natsURL,
+	"NATS_CONN_NAME": &env.natsConnName,
+}
+
 var once sync.Once
 
-// Load loads environment variables. It panics if any
-// required one is missing.
-func Load() {
+// Load loads environment variables. It returns error if any
+// required one is missed.
+func Load() (err error) {
 	once.Do(func() {
-
-		envMap := map[string]*string{
-			"JWT_KEY":        &env.jwtKey,
-			"MONGO_URI":      &env.mongoURI,
-			"NATS_URL":       &env.natsURL,
-			"NATS_CONN_NAME": &env.natsConnName,
-		}
 		for k, dst := range envMap {
-			load(k, dst)
+			if err = load(k, dst); err != nil {
+				break
+			}
 		}
 	})
+	return
 }
 
-func load(key string, dst *string) {
+func load(key string, dst *string) error {
 	if *dst = os.Getenv(key); *dst == "" {
-		panicEnv(key)
+		return fmtError(key)
 	}
+	return nil
 }
 
-func panicEnv(envName string) {
-	fmts.Panicf("'%s', env. is required", envName)
+func fmtError(envName string) error {
+	return fmt.Errorf("'%s', env. is required", envName)
 }
 
 func JWTKey() string {

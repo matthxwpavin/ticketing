@@ -1,6 +1,7 @@
 package pmux
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/locales/en"
@@ -8,7 +9,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gorilla/mux"
-	"github.com/matthxwpavin/ticketing/fmts"
 	"github.com/matthxwpavin/ticketing/logging/sugar"
 
 	"go.uber.org/zap"
@@ -62,7 +62,7 @@ func WithValidatorAndTranslation(opts *RouterOptions) {
 func WithLogger(opts *RouterOptions) {
 	logger, err := sugar.New()
 	if err != nil {
-		fmts.Panicf("failed to new logger: %v", err)
+		panic(fmt.Sprintf("failed to new logger: %v", err))
 	}
 	opts.Logger = logger
 }

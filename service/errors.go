@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/matthxwpavin/ticketing/jwtutils"
+	"github.com/matthxwpavin/ticketing/jwtclaims"
 	"github.com/matthxwpavin/ticketing/validator"
 )
 
@@ -47,8 +47,8 @@ var ErrUnauthorized = &UnauthorizedError{CustomError{
 	Msg:  "Unauthorized",
 }}
 
-func IsAuthorized(ctx context.Context) (*jwtutils.CustomClaims, error) {
-	if claims := jwtutils.ClaimsFromContext(ctx); claims != nil {
+func IsAuthorized(ctx context.Context) (*jwtclaims.CustomClaims, error) {
+	if claims := jwtclaims.FromContext(ctx); claims != nil {
 		return claims, nil
 	}
 	return nil, ErrUnauthorized

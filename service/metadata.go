@@ -3,7 +3,7 @@ package service
 import (
 	"time"
 
-	"github.com/matthxwpavin/ticketing/mongodb"
+	"github.com/matthxwpavin/ticketing/database/mongo"
 )
 
 type Metadata struct {
@@ -12,7 +12,7 @@ type Metadata struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func MetadataFrom(data *mongodb.Metadata) *Metadata {
+func MetadataFrom(data *mongo.Metadata) *Metadata {
 	return &Metadata{
 		ID:        data.ID.Hex(),
 		CreatedAt: data.CreatedAt,
