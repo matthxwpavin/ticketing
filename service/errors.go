@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"github.com/matthxwpavin/ticketing/jwtclaims"
-	"github.com/matthxwpavin/ticketing/validator"
 )
 
 const (
@@ -22,7 +23,7 @@ func (s *CustomError) Error() string {
 	return s.Msg
 }
 
-func NewInvalidParameterError(msg string, err validator.ValidationErrors) *CustomError {
+func NewInvalidParameterError(msg string, err ValidationErrors) *CustomError {
 	return &CustomError{
 		Type: "invalid_parameter",
 		Msg:  msg,
@@ -36,6 +37,14 @@ func NewServiceFailureError(msg, code string) *CustomError {
 		Msg:  msg,
 		Val:  code,
 	}
+}
+
+func NewCustomErrorFrom(r *http.Response) (*CustomError, error) {
+	var ce CustomError
+	if err := json.NewDecoder(r.Body).Decode(&ce); err != nil {
+		return nil, err
+	}
+	return &ce, nil
 }
 
 type UnauthorizedError struct {
@@ -54,9 +63,16 @@ func IsAuthorized(ctx context.Context) (*jwtclaims.CustomClaims, error) {
 	return nil, ErrUnauthorized
 }
 
-func HandleValidateError(err error) error {
+func ValidateStruct(a any) error {
+	if err := v.Struct(a); err != nil {
+		return handleValidateError(err)
+	}
+	return nil
+}
+
+func handleValidateError(err error) error {
 	switch v := err.(type) {
-	case validator.ValidationErrors:
+	case ValidationErrors:
 		return NewInvalidParameterError("Invalid Parameters", v)
 	default:
 		return NewServiceFailureError("Validation Failed", "")

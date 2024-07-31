@@ -10,7 +10,8 @@ import (
 )
 
 type Collection[T any] struct {
-	c *mongo.Collection
+	Name string
+	c    *mongo.Collection
 }
 
 func NewCollection[T any](db *DB, name string) *Collection[T] {
@@ -110,6 +111,11 @@ func (c *Collection[_]) DeleteAll(ctx context.Context) error {
 		logger.Errorw("could not delete all", "error", err)
 	}
 	return err
+}
+
+func (c *Collection[_]) Aggregate(ctx context.Context, stage bson.D, stages ...bson.D) (*mongo.Cursor, error) {
+	allStages := append([]bson.D{stage}, stages...)
+	return c.c.Aggregate(ctx, mongo.Pipeline(allStages))
 }
 
 func (c *Collection[_]) idFilter(id string) bson.D {

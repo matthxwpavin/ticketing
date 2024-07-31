@@ -1,4 +1,4 @@
-package validator
+package service
 
 import (
 	"encoding/json"
@@ -9,19 +9,21 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
-type Validator struct {
+type validation struct {
 	Validate   *validator.Validate
 	Translator ut.Translator
 }
 
-func Default() *Validator {
+var v *validation
+
+func init() {
 	en := en.New()
 	uni := ut.New(en, en)
 	trans, _ := uni.GetTranslator("en")
 	validator := validator.New(validator.WithRequiredStructEnabled())
 	en_translations.RegisterDefaultTranslations(validator, trans)
 
-	return &Validator{
+	v = &validation{
 		Validate:   validator,
 		Translator: trans,
 	}
@@ -42,7 +44,7 @@ func (e ValidationErrors) Error() string {
 	return string(bb)
 }
 
-func (v *Validator) Struct(a any) error {
+func (v *validation) Struct(a any) error {
 	err := v.Validate.Struct(a)
 	errs, ok := err.(validator.ValidationErrors)
 	if !ok {

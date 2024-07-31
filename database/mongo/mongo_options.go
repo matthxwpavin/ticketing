@@ -42,6 +42,9 @@ func (s *Schema) MongoSchema() map[string]any {
 		if p.MinLength != nil {
 			propsMap["minLength"] = *p.MinLength
 		}
+		if len(p.Enum) > 0 {
+			propsMap["enum"] = p.Enum
+		}
 		schema[prop.Name] = propsMap
 	}
 	if len(required) > 0 {
@@ -53,12 +56,14 @@ func (s *Schema) MongoSchema() map[string]any {
 const (
 	BSONTypeString = "string"
 	BSONTypeDouble = "double"
+	BSONTypeDate   = "date"
 )
 
 type Property struct {
 	BSONType    *string
 	Description *string
 	MinLength   *uint
+	Enum        []string
 }
 
 type NamedProperty struct {

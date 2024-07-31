@@ -35,7 +35,7 @@ func (s Testing) Run(t *testing.T) {
 		rs := w.Result()
 		if a.StatusCodeFunc != nil {
 			if !a.StatusCodeFunc(rs.StatusCode) {
-				t.Fatalf("status code func returns false, expected: %v", rs.StatusCode)
+				t.Fatalf("status code func returns false, got: %v", rs.StatusCode)
 			}
 		} else if a.StatusCode != 0 && rs.StatusCode != a.StatusCode {
 			t.Fatalf(
@@ -59,13 +59,17 @@ type TestingSpecifications struct {
 	StatusCodeFunc func(statusCode int) bool
 }
 
-type Prepared struct {
-	Handler http.Handler
+type prepared struct {
+	handler http.Handler
 }
 
-func (s *Prepared) Testing(specs TestingSpecifications) Testing {
+func Prepare(handler http.Handler) *prepared {
+	return &prepared{handler: handler}
+}
+
+func (s *prepared) Testing(specs TestingSpecifications) Testing {
 	return Testing{
-		Handler: s.Handler,
+		Handler: s.handler,
 		Specs:   specs,
 	}
 }
