@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/matthxwpavin/ticketing/jwtclaims"
@@ -13,34 +14,48 @@ const (
 	ErrTypeNameServiceFailure   = "service_failure"
 )
 
-type CustomError struct {
-	Type string `json:"type"`
-	Msg  string `json:"message"`
-	Val  any    `json:"value,omitempty"`
+type customError struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
+	Value   any    `json:"value,omitempty"`
 }
 
-func (s *CustomError) Error() string {
-	return s.Msg
+func (s *customError) Error() string {
+	return fmt.Sprintf("type: %v, message: %v, value: %v", s.Type, s.Message, s.Value)
 }
 
-func NewInvalidParameterError(msg string, err ValidationErrors) *CustomError {
-	return &CustomError{
-		Type: "invalid_parameter",
-		Msg:  msg,
-		Val:  err,
-	}
+type InvalidParameterError struct {
+	customError
 }
 
-func NewServiceFailureError(msg, code string) *CustomError {
-	return &CustomError{
-		Type: "service_failure",
-		Msg:  msg,
-		Val:  code,
-	}
+func newInvalidParameterError(err ValidationErrors) *InvalidParameterError {
+	return &InvalidParameterError{
+		customError{
+			Type:    "invalid_parameter",
+			Message: "Invalid Parameters",
+			Value:   err,
+		}}
 }
 
-func NewCustomErrorFrom(r *http.Response) (*CustomError, error) {
-	var ce CustomError
+type ServiceFailureError struct {
+	customError
+}
+
+func (se *ServiceFailureError) WithCode(code string) *ServiceFailureError {
+	se.Value = code
+	return se
+}
+
+func NewServiceFailureError(message string) *ServiceFailureError {
+	return &ServiceFailureError{
+		customError{
+			Type:    "service_failure",
+			Message: message,
+		}}
+}
+
+func NewCustomErrorFrom(r *http.Response) (*customError, error) {
+	var ce customError
 	if err := json.NewDecoder(r.Body).Decode(&ce); err != nil {
 		return nil, err
 	}
@@ -48,12 +63,12 @@ func NewCustomErrorFrom(r *http.Response) (*CustomError, error) {
 }
 
 type UnauthorizedError struct {
-	CustomError
+	customError
 }
 
-var ErrUnauthorized = &UnauthorizedError{CustomError{
-	Type: "unauthorized",
-	Msg:  "Unauthorized",
+var ErrUnauthorized = &UnauthorizedError{customError{
+	Type:    "unauthorized",
+	Message: "Unauthorized",
 }}
 
 func IsAuthorized(ctx context.Context) (*jwtclaims.CustomClaims, error) {
@@ -73,8 +88,8 @@ func ValidateStruct(a any) error {
 func handleValidateError(err error) error {
 	switch v := err.(type) {
 	case ValidationErrors:
-		return NewInvalidParameterError("Invalid Parameters", v)
+		return newInvalidParameterError(v)
 	default:
-		return NewServiceFailureError("Validation Failed", "")
+		return NewServiceFailureError("Validation Failed")
 	}
 }

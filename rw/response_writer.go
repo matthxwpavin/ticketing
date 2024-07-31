@@ -44,15 +44,12 @@ func JSON201(ctx context.Context, w http.ResponseWriter, v any) {
 
 func Error(ctx context.Context, w http.ResponseWriter, err error) {
 	switch err.(type) {
-	case *service.CustomError:
+	case *service.InvalidParameterError, *service.ServiceFailureError:
 		JSON400(ctx, w, err)
 	case *service.UnauthorizedError:
 		JSON401(ctx, w, err)
 	default:
-		JSON400(ctx, w, &service.CustomError{
-			Type: "unknown",
-			Msg:  "Something went wrong",
-		})
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
