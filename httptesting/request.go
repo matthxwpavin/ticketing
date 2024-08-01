@@ -16,6 +16,10 @@ func NewRequestPut(target string, body io.Reader) *http.Request {
 	return httptest.NewRequest(http.MethodPut, target, body)
 }
 
+func NewRequestPatch(target string, body io.Reader) *http.Request {
+	return httptest.NewRequest(http.MethodPatch, target, body)
+}
+
 func NewRequestDelete(target string) *http.Request {
 	return httptest.NewRequest(http.MethodDelete, target, nil)
 }
@@ -30,6 +34,10 @@ func NewRequestPostJson(target string, v any) (*http.Request, error) {
 
 func NewRequestPutJson(target string, v any) (*http.Request, error) {
 	return jsonRequest(target, v, NewRequestPut)
+}
+
+func NewRequestPatchJson(target string, v any) (*http.Request, error) {
+	return jsonRequest(target, v, NewRequestPatch)
 }
 
 func jsonRequest(target string, v any, createRequest func(string, io.Reader) *http.Request) (*http.Request, error) {

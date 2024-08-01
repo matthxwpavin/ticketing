@@ -71,11 +71,19 @@ var ErrUnauthorized = &UnauthorizedError{customError{
 	Message: "Unauthorized",
 }}
 
-func IsAuthorized(ctx context.Context) (*jwtclaims.CustomClaims, error) {
+func AuthenticateClaims(ctx context.Context) (*jwtclaims.CustomClaims, error) {
 	if claims := jwtclaims.FromContext(ctx); claims != nil {
 		return claims, nil
 	}
 	return nil, ErrUnauthorized
+}
+
+func Authenticate(ctx context.Context) (*jwtclaims.Metadata, error) {
+	claims, err := AuthenticateClaims(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &claims.Metadata, nil
 }
 
 func ValidateStruct(a any) error {
