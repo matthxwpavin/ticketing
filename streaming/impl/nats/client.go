@@ -95,7 +95,7 @@ func (s *subject[_]) consumer(
 	conn *nats.Conn,
 	errHandler streaming.ConsumeErrorHandler,
 ) (streaming.Consumer, error) {
-	cmr, err := s.createConsumerIfNotExist(ctx, conn, errHandler)
+	cmr, err := s.createConsumerIfNotExist(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (s *subject[T]) jsonConsumer(
 	conn *nats.Conn,
 	errHandler streaming.ConsumeErrorHandler,
 ) (streaming.JsonConsumer[T], error) {
-	cmr, err := s.createConsumerIfNotExist(ctx, conn, errHandler)
+	cmr, err := s.createConsumerIfNotExist(ctx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,6 @@ func (s *subject[T]) jsonConsumer(
 func (s *subject[_]) createConsumerIfNotExist(
 	ctx context.Context,
 	conn *nats.Conn,
-	errHandler streaming.ConsumeErrorHandler,
 ) (jetstream.Consumer, error) {
 	logger := sugar.FromContext(ctx)
 	js, err := createStreamIfNotExist(ctx, conn, s.streamName, s.name)
