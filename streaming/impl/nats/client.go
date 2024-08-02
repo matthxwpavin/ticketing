@@ -7,7 +7,6 @@ import (
 	"github.com/matthxwpavin/ticketing/env"
 	"github.com/matthxwpavin/ticketing/logging/sugar"
 	"github.com/matthxwpavin/ticketing/streaming"
-	"github.com/matthxwpavin/ticketing/streaming/ticket"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -70,20 +69,6 @@ func (c *Client) Disconenct(ctx context.Context) error {
 	c.conn.Close()
 	logger.Info("NATS connection closed")
 	return nil
-}
-
-func (c *Client) TicketCreatedPublisher(ctx context.Context) (
-	ticket.CreatedPublisher,
-	error,
-) {
-	return publisher[ticket.CreatedMessage](ctx, c.conn, "ticket:created", "ticket:created")
-}
-
-func (c *Client) TicketUpdatedPublisher(ctx context.Context) (
-	ticket.UpdatedPublisher,
-	error,
-) {
-	return publisher[ticket.UpdatedMessage](ctx, c.conn, "ticket:updated", "ticket:updated")
 }
 
 func publisher[T any](

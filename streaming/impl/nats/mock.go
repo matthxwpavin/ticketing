@@ -3,23 +3,38 @@ package nats
 import (
 	"context"
 
-	"github.com/matthxwpavin/ticketing/streaming/ticket"
+	"github.com/matthxwpavin/ticketing/streaming/orderstream"
+	"github.com/matthxwpavin/ticketing/streaming/ticketstream"
 )
 
 type MockClient struct{}
 
 func (c *MockClient) TicketCreatedPublisher(ctx context.Context) (
-	ticket.CreatedPublisher,
+	ticketstream.CreatedPublisher,
 	error,
 ) {
-	return &mockJetStream[ticket.CreatedMessage]{}, nil
+	return &mockJetStream[ticketstream.CreatedMessage]{}, nil
 }
 
 func (c *MockClient) TicketUpdatedPublisher(ctx context.Context) (
-	ticket.UpdatedPublisher,
+	ticketstream.UpdatedPublisher,
 	error,
 ) {
-	return &mockJetStream[ticket.UpdatedMessage]{}, nil
+	return &mockJetStream[ticketstream.UpdatedMessage]{}, nil
+}
+
+func (c *MockClient) OrderCreatedPublisher(ctx context.Context) (
+	orderstream.CreatedPublisher,
+	error,
+) {
+	return &mockJetStream[orderstream.CreatedMessage]{}, nil
+}
+
+func (c *MockClient) OrderCancelledPublisher(ctx context.Context) (
+	orderstream.CancelledPublisher,
+	error,
+) {
+	return &mockJetStream[orderstream.CancelledMessage]{}, nil
 }
 
 type mockJetStream[T any] struct{}
