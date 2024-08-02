@@ -1,6 +1,10 @@
 package jwtcookie
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/matthxwpavin/ticketing/env"
+)
 
 const Name = "ticketing-jwt"
 
@@ -9,7 +13,7 @@ func New(jwt string) *http.Cookie {
 		Name:     Name,
 		Value:    jwt,
 		Path:     "/",
-		Secure:   true,
+		Secure:   !env.Dev(),
 		HttpOnly: true,
 	}
 }

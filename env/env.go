@@ -11,6 +11,7 @@ type Env struct {
 	mongoURI     string
 	natsURL      string
 	natsConnName string
+	dev          string
 }
 
 var env Env
@@ -20,6 +21,7 @@ var envMap = map[string]*string{
 	"MONGO_URI":      &env.mongoURI,
 	"NATS_URL":       &env.natsURL,
 	"NATS_CONN_NAME": &env.natsConnName,
+	"DEV":            &env.dev,
 }
 
 var once sync.Once
@@ -62,4 +64,8 @@ func NatsURL() string {
 
 func NatsConnectionName() string {
 	return env.natsConnName
+}
+
+func Dev() bool {
+	return env.dev == "dev"
 }
