@@ -71,12 +71,134 @@ func (c *Client) Disconenct(ctx context.Context) error {
 	return nil
 }
 
-func publisher[T any](
+type subject[T any] struct {
+	name       string
+	streamName string
+}
+
+func (s *subject[T]) publisher(ctx context.Context, conn *nats.Conn) (streaming.Publisher[T], error) {
+	logger := sugar.FromContext(ctx)
+	js, err := createStreamIfNotExist(ctx, conn, s.streamName, s.name)
+	if err != nil {
+		logger.Errorw("could not create stream", "error", err)
+		return nil, err
+	}
+	return &jetStream[T]{
+		name:    s.streamName,
+		subject: s.name,
+		js:      js,
+	}, nil
+}
+
+func (s *subject[_]) consumer(
 	ctx context.Context,
 	conn *nats.Conn,
-	name string,
-	subject string,
-) (streaming.Publisher[T], error) {
+	errHandler streaming.ConsumeErrorHandler,
+) (streaming.Consumer, error) {
+	cmr, err := s.createConsumerIfNotExist(ctx, conn, errHandler)
+	if err != nil {
+		return nil, err
+	}
+	return &jetstreamConsumer{
+		Consumer:   cmr,
+		errHandler: errHandler,
+	}, nil
+}
+
+func (s *subject[T]) jsonConsumer(
+	ctx context.Context,
+	conn *nats.Conn,
+	errHandler streaming.ConsumeErrorHandler,
+) (streaming.JsonConsumer[T], error) {
+	cmr, err := s.createConsumerIfNotExist(ctx, conn, errHandler)
+	if err != nil {
+		return nil, err
+	}
+	return &jsonConsumer[T]{
+		Consumer:   cmr,
+		errHandler: errHandler,
+	}, nil
+}
+
+func (s *subject[_]) createConsumerIfNotExist(
+	ctx context.Context,
+	conn *nats.Conn,
+	errHandler streaming.ConsumeErrorHandler,
+) (jetstream.Consumer, error) {
+	logger := sugar.FromContext(ctx)
+	js, err := createStreamIfNotExist(ctx, conn, s.streamName, s.name)
+	if err != nil {
+		logger.Errorw("could not create stream", "error", err)
+		return nil, err
+	}
+	logger = logger.With("stream_name", s.streamName, "subject", s.name)
+	cmr, err := js.Consumer(ctx, s.streamName, s.name)
+	notfound := err == jetstream.ErrConsumerNotFound
+	if err != nil && !notfound {
+		logger.Errorw("could not get a consumer", "error", err)
+		return nil, err
+	}
+	if notfound {
+		cmr, err = js.CreateConsumer(
+			ctx,
+			s.streamName,
+			jetstream.ConsumerConfig{
+				Durable:       s.name,
+				AckPolicy:     jetstream.AckExplicitPolicy,
+				DeliverPolicy: jetstream.DeliverAllPolicy,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return cmr, nil
+}
+
+type jetstreamConsumer struct {
+	errHandler streaming.ConsumeErrorHandler
+	jetstream.Consumer
+}
+
+func (c *jetstreamConsumer) Consume(ctx context.Context, handler streaming.MessgeHadler) (streaming.Unsubscriber, error) {
+	return consume(ctx, c.Consumer, c.errHandler, func(msg jetstream.Msg) {
+		handler(msg.Data(), msg.Ack)
+	})
+}
+
+type jsonConsumer[T any] struct {
+	errHandler streaming.ConsumeErrorHandler
+	jetstream.Consumer
+}
+
+func (c *jsonConsumer[T]) Consume(ctx context.Context, handler streaming.JsonMessageHandler[T]) (streaming.Unsubscriber, error) {
+	return consume(ctx, c.Consumer, c.errHandler, func(msg jetstream.Msg) {
+		logger := sugar.FromContext(ctx)
+		jsonMsg := new(T)
+		if err := json.Unmarshal(msg.Data(), jsonMsg); err != nil {
+			logger.Errorw("could not unmarshal a message", "error", err)
+			return
+		}
+		handler(jsonMsg, msg.Ack)
+	})
+}
+
+func consume(
+	ctx context.Context,
+	consumer jetstream.Consumer,
+	errHandler streaming.ConsumeErrorHandler,
+	hanlder jetstream.MessageHandler,
+) (streaming.Unsubscriber, error) {
+	cctx, err := consumer.Consume(hanlder, jetstream.ConsumeErrHandler(func(consumeCtx jetstream.ConsumeContext, err error) {
+		errHandler(func() {
+			consumeCtx.Drain()
+			consumeCtx.Stop()
+		}, err)
+	}))
+	return func() { cctx.Drain(); cctx.Stop() }, err
+}
+
+func createStreamIfNotExist(ctx context.Context, conn *nats.Conn, name string, subject string) (jetstream.JetStream, error) {
 	logger := sugar.FromContext(ctx)
 
 	js, err := jetstream.New(conn)
@@ -102,12 +224,7 @@ func publisher[T any](
 			return nil, err
 		}
 	}
-
-	return &jetStream[T]{
-		name:    name,
-		subject: subject,
-		js:      js,
-	}, nil
+	return js, nil
 }
 
 type jetStream[T any] struct {

@@ -3,19 +3,37 @@ package nats
 import (
 	"context"
 
-	"github.com/matthxwpavin/ticketing/streaming/ticketstream"
+	"github.com/matthxwpavin/ticketing/streaming"
+)
+
+var (
+	ticketCreated = &subject[streaming.TicketCreatedMessage]{
+		name:       "ticket:created",
+		streamName: "ticket:created",
+	}
+	ticketUpdated = &subject[streaming.TicketUpdatedMessage]{
+		name:       "ticket:updated",
+		streamName: "ticket:updated",
+	}
 )
 
 func (c *Client) TicketCreatedPublisher(ctx context.Context) (
-	ticketstream.CreatedPublisher,
+	streaming.TicketCreatedPublisher,
 	error,
 ) {
-	return publisher[ticketstream.CreatedMessage](ctx, c.conn, "ticket:created", "ticket:created")
+	return ticketCreated.publisher(ctx, c.conn)
+}
+
+func (c *Client) TicketCreatedConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
+	streaming.TicketCreatedConsumer,
+	error,
+) {
+	return ticketCreated.jsonConsumer(ctx, c.conn, errHandler)
 }
 
 func (c *Client) TicketUpdatedPublisher(ctx context.Context) (
-	ticketstream.UpdatedPublisher,
+	streaming.TicketUpdatedPublisher,
 	error,
 ) {
-	return publisher[ticketstream.UpdatedMessage](ctx, c.conn, "ticket:updated", "ticket:updated")
+	return ticketUpdated.publisher(ctx, c.conn)
 }

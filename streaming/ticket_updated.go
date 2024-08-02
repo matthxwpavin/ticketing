@@ -1,12 +1,12 @@
-package ticketstream
+package streaming
 
 import "context"
 
-type CreatedPublisher interface {
-	Publish(context.Context, *CreatedMessage) error
+type TicketUpdatedPublisher interface {
+	Publish(context.Context, *TicketUpdatedMessage) error
 }
 
-type CreatedMessage struct {
+type TicketUpdatedMessage struct {
 	TicketID      string  `json:"ticketID"`
 	TicketTitle   string  `json:"ticketTitle"`
 	TicketPrice   float64 `json:"ticketPrice"`

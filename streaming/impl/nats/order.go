@@ -3,19 +3,44 @@ package nats
 import (
 	"context"
 
-	"github.com/matthxwpavin/ticketing/streaming/orderstream"
+	"github.com/matthxwpavin/ticketing/streaming"
+)
+
+var (
+	orderCreated = &subject[streaming.OrderCreatedMessage]{
+		name:       "order:created",
+		streamName: "order:created",
+	}
+	orderCancelled = &subject[streaming.OrderCancelledMessage]{
+		name:       "order:cancelled",
+		streamName: "order:cancelled",
+	}
 )
 
 func (c *Client) OrderCreatedPublisher(ctx context.Context) (
-	orderstream.CreatedPublisher,
+	streaming.OrderCreatedPublisher,
 	error,
 ) {
-	return publisher[orderstream.CreatedMessage](ctx, c.conn, "order:created", "order:created")
+	return orderCreated.publisher(ctx, c.conn)
+}
+
+func (c *Client) OrderCreatedConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
+	streaming.OrderCreatedConsumer,
+	error,
+) {
+	return orderCreated.jsonConsumer(ctx, c.conn, errHandler)
 }
 
 func (c *Client) OrderCancelledPublisher(ctx context.Context) (
-	orderstream.CancelledPublisher,
+	streaming.OrderCancelledPublisher,
 	error,
 ) {
-	return publisher[orderstream.CancelledMessage](ctx, c.conn, "order:cancelled", "order:cancelled")
+	return orderCancelled.publisher(ctx, c.conn)
+}
+
+func (c *Client) OrderCancelledConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
+	streaming.OrderCancelledConsumer,
+	error,
+) {
+	return orderCancelled.jsonConsumer(ctx, c.conn, errHandler)
 }
