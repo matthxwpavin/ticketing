@@ -17,5 +17,5 @@ type TicketCreatedMessage struct {
 	TicketTitle   string  `json:"ticketTitle"`
 	TicketPrice   float64 `json:"ticketPrice"`
 	UserID        string  `json:"userID"`
-	TicketVersion int     `json:"ticketVersion"`
+	TicketVersion int32   `json:"ticketVersion"`
 }

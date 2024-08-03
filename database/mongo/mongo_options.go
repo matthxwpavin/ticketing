@@ -57,6 +57,7 @@ const (
 	BSONTypeString = "string"
 	BSONTypeDouble = "double"
 	BSONTypeDate   = "date"
+	BSONTypeInt    = "int"
 )
 
 type Property struct {

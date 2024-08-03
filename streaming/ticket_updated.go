@@ -11,7 +11,8 @@ type TicketUpdateConsumer interface {
 }
 
 type TicketUpdatedMessage struct {
-	TicketID    string  `json:"ticketID"`
-	TicketTitle string  `json:"ticketTitle"`
-	TicketPrice float64 `json:"ticketPrice"`
+	TicketID      string  `json:"ticketID"`
+	TicketTitle   string  `json:"ticketTitle"`
+	TicketPrice   float64 `json:"ticketPrice"`
+	TicketVersion int32   `json:"ticketVersion"`
 }
