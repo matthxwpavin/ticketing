@@ -37,3 +37,10 @@ func (c *Client) TicketUpdatedPublisher(ctx context.Context) (
 ) {
 	return ticketUpdated.publisher(ctx, c.conn)
 }
+
+func (c *Client) TicketUpdatedConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
+	streaming.TicketUpdateConsumer,
+	error,
+) {
+	return ticketUpdated.jsonConsumer(ctx, c.conn, errHandler)
+}

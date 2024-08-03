@@ -29,6 +29,13 @@ func (c *MockClient) TicketCreatedConsumer(context.Context, streaming.ConsumeErr
 	return &mockJetStream[streaming.TicketCreatedMessage]{}, nil
 }
 
+func (c *MockClient) TicketUpdatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+	streaming.TicketUpdateConsumer,
+	error,
+) {
+	return &mockJetStream[streaming.TicketUpdatedMessage]{}, nil
+}
+
 func (c *MockClient) OrderCreatedPublisher(context.Context) (
 	streaming.OrderCreatedPublisher,
 	error,
