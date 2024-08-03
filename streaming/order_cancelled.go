@@ -13,8 +13,9 @@ type OrderCancelledConsumer interface {
 }
 
 type OrderCancelledMessage struct {
-	OrderId string `json:"orderId"`
-	Ticket  struct {
+	OrderId      string `json:"orderId"`
+	OrderVersion int32  `json:"orderVersion"`
+	Ticket       struct {
 		Id string `json:"id"`
 	} `json:"ticket"`
 }
