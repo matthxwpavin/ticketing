@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/matthxwpavin/ticketing/logging/sugar"
+	"github.com/matthxwpavin/ticketing/prettyjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -14,11 +15,15 @@ import (
 )
 
 type DB struct {
-	URI     string
+	URI    string
+	Config DbConfig
+	client *mongo.Client
+	db     *mongo.Database
+}
+
+type DbConfig struct {
 	Name    string
 	Options []*MigrationOptions
-	client  *mongo.Client
-	db      *mongo.Database
 }
 
 func (s *DB) Connect(ctx context.Context) error {
@@ -42,7 +47,7 @@ func (s *DB) Connect(ctx context.Context) error {
 		logger.Errorw("could not ping the database", "error", err)
 		return err
 	}
-	s.db = s.client.Database(s.Name)
+	s.db = s.client.Database(s.Config.Name)
 	return nil
 }
 
@@ -51,11 +56,13 @@ func (s *DB) Migrate(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not list collection names: %v", err)
 	}
-	for _, opt := range s.Options {
+	for _, opt := range s.Config.Options {
 		if !slices.Contains(cnames, opt.CollectionName) {
 			createOpts := &options.CreateCollectionOptions{
 				Validator: opt.Validator.MongoSchema(),
 			}
+			fmt.Println("collection:", opt.CollectionName)
+			fmt.Println(prettyjson.Stringify(opt.Validator.MongoSchema()))
 			if err := s.db.CreateCollection(ctx, opt.CollectionName, createOpts); err != nil {
 				return fmt.Errorf("could not create the schema: %v", err)
 			}

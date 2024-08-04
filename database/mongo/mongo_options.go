@@ -16,22 +16,21 @@ func (v *Validator) MongoSchema() map[string]any {
 }
 
 type Schema struct {
-	// Required []string `structs:"required"`
-	// Properties map[string]Property `structs:"properties"`
 	Properties []*NamedProperty
 }
 
 func (s *Schema) MongoSchema() map[string]any {
 	schema := make(map[string]any)
 	var required []string
+	type properties map[string]map[string]any
+	if len(s.Properties) > 0 {
+		schema["properties"] = make(properties)
+	}
 	for _, prop := range s.Properties {
 		if prop.IsRequired {
 			required = append(required, prop.Name)
 		}
 		p := prop.Property
-		// "bsonType":    p.BSONType,
-		// 	"description": p.Description,
-		// 	"minLength":   p.MinLength,
 		propsMap := make(map[string]any)
 		if p.BSONType != nil {
 			propsMap["bsonType"] = *p.BSONType
@@ -45,7 +44,7 @@ func (s *Schema) MongoSchema() map[string]any {
 		if len(p.Enum) > 0 {
 			propsMap["enum"] = p.Enum
 		}
-		schema[prop.Name] = propsMap
+		schema["properties"].(properties)[prop.Name] = propsMap
 	}
 	if len(required) > 0 {
 		schema["required"] = required
