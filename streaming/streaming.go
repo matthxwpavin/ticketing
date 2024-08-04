@@ -24,3 +24,8 @@ type JsonMessageHandler[T any] func(*T, AckFunc)
 type Unsubscriber func()
 
 type ConsumeErrorHandler func(Unsubscriber, error)
+
+type TopicsMessages struct {
+	TicketUpdatedMsg *TicketUpdatedMessage
+	TicketCreatedMsg *TicketCreatedMessage
+}

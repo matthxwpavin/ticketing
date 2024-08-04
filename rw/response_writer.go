@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/matthxwpavin/ticketing/logging/sugar"
-	"github.com/matthxwpavin/ticketing/service"
+	"github.com/matthxwpavin/ticketing/serviceutil"
 )
 
 func JSONWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, v any) {
@@ -44,9 +44,9 @@ func JSON201(ctx context.Context, w http.ResponseWriter, v any) {
 
 func Error(ctx context.Context, w http.ResponseWriter, err error) {
 	switch err.(type) {
-	case *service.InvalidParameterError, *service.ServiceFailureError:
+	case *serviceutil.InvalidParameterError, *serviceutil.ServiceFailureError:
 		JSON400(ctx, w, err)
-	case *service.UnauthorizedError:
+	case *serviceutil.UnauthorizedError:
 		JSON401(ctx, w, err)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)

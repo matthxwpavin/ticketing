@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/matthxwpavin/ticketing/logging/sugar"
-	"github.com/matthxwpavin/ticketing/prettyjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -61,8 +60,6 @@ func (s *DB) Migrate(ctx context.Context) error {
 			createOpts := &options.CreateCollectionOptions{
 				Validator: opt.Validator.MongoSchema(),
 			}
-			fmt.Println("collection:", opt.CollectionName)
-			fmt.Println(prettyjson.Stringify(opt.Validator.MongoSchema()))
 			if err := s.db.CreateCollection(ctx, opt.CollectionName, createOpts); err != nil {
 				return fmt.Errorf("could not create the schema: %v", err)
 			}

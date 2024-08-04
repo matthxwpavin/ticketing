@@ -7,8 +7,7 @@ import (
 )
 
 type MockClient struct {
-	TicketUpdatedMsg *streaming.TicketUpdatedMessage
-	TicketCreatedMsg *streaming.TicketCreatedMessage
+	streaming.TopicsMessages
 }
 
 func (c *MockClient) TicketCreatedPublisher(context.Context) (
@@ -64,6 +63,8 @@ type mockJetStream[T any] struct {
 func (mjs *mockJetStream[T]) Publish(context.Context, *T) error { return nil }
 
 func (mjs *mockJetStream[T]) Consume(ctx context.Context, handler streaming.JsonMessageHandler[T]) (streaming.Unsubscriber, error) {
-	handler(mjs.msg, func() error { return nil })
+	if mjs.msg != nil {
+		handler(mjs.msg, func() error { return nil })
+	}
 	return nil, nil
 }
