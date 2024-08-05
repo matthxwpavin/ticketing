@@ -90,21 +90,6 @@ func (s *subject[T]) publisher(ctx context.Context, conn *nats.Conn) (streaming.
 	}, nil
 }
 
-func (s *subject[_]) consumer(
-	ctx context.Context,
-	conn *nats.Conn,
-	errHandler streaming.ConsumeErrorHandler,
-) (streaming.Consumer, error) {
-	cmr, err := s.createConsumerIfNotExist(ctx, conn)
-	if err != nil {
-		return nil, err
-	}
-	return &jetstreamConsumer{
-		Consumer:   cmr,
-		errHandler: errHandler,
-	}, nil
-}
-
 func (s *subject[T]) jsonConsumer(
 	ctx context.Context,
 	conn *nats.Conn,
@@ -154,17 +139,6 @@ func (s *subject[_]) createConsumerIfNotExist(
 	return cmr, nil
 }
 
-type jetstreamConsumer struct {
-	errHandler streaming.ConsumeErrorHandler
-	jetstream.Consumer
-}
-
-func (c *jetstreamConsumer) Consume(ctx context.Context, handler streaming.MessgeHadler) (streaming.Unsubscriber, error) {
-	return consume(ctx, c.Consumer, c.errHandler, func(msg jetstream.Msg) {
-		handler(msg.Data(), msg.Ack)
-	})
-}
-
 type jsonConsumer[T any] struct {
 	errHandler streaming.ConsumeErrorHandler
 	jetstream.Consumer
@@ -183,7 +157,7 @@ func (c *jsonConsumer[T]) Consume(ctx context.Context, handler streaming.JsonMes
 }
 
 func consume(
-	ctx context.Context,
+	_ context.Context,
 	consumer jetstream.Consumer,
 	errHandler streaming.ConsumeErrorHandler,
 	hanlder jetstream.MessageHandler,
