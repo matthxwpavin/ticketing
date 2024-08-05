@@ -7,14 +7,16 @@ import (
 )
 
 type MockClient struct {
-	streaming.TopicsMessages
+	streaming.AckTopicsMessages
 }
 
 func (c *MockClient) TicketCreatedPublisher(context.Context) (
 	streaming.TicketCreatedPublisher,
 	error,
 ) {
-	return &mockJetStream[streaming.TicketCreatedMessage]{}, nil
+	return &mockJetStream[streaming.TicketCreatedMessage]{
+		msg: c.TicketCreatedMsg,
+	}, nil
 }
 
 func (c *MockClient) TicketUpdatedPublisher(context.Context) (
@@ -56,15 +58,33 @@ func (c *MockClient) OrderCancelledPublisher(context.Context) (
 	return &mockJetStream[streaming.OrderCancelledMessage]{}, nil
 }
 
+func (c *MockClient) OrderCreatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+	streaming.OrderCreatedConsumer,
+	error,
+) {
+	return &mockJetStream[streaming.OrderCreatedMessage]{
+		msg: c.OrderCreatedMsg,
+	}, nil
+}
+
+func (c *MockClient) OrderCancelledConsumer(context.Context, streaming.ConsumeErrorHandler) (
+	streaming.OrderCancelledConsumer,
+	error,
+) {
+	return &mockJetStream[streaming.OrderCancelledMessage]{
+		msg: c.OrderCancelledMsg,
+	}, nil
+}
+
 type mockJetStream[T any] struct {
-	msg *T
+	msg *streaming.AcknowledgeMessage[T]
 }
 
 func (mjs *mockJetStream[T]) Publish(context.Context, *T) error { return nil }
 
 func (mjs *mockJetStream[T]) Consume(ctx context.Context, handler streaming.JsonMessageHandler[T]) (streaming.Unsubscriber, error) {
 	if mjs.msg != nil {
-		handler(mjs.msg, func() error { return nil })
+		handler(mjs.msg.Message, func() error { mjs.msg.Ack(); return nil })
 	}
 	return nil, nil
 }

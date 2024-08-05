@@ -29,3 +29,18 @@ type TopicsMessages struct {
 	TicketUpdatedMsg *TicketUpdatedMessage
 	TicketCreatedMsg *TicketCreatedMessage
 }
+
+type AcknowledgeMessage[T any] struct {
+	acked   bool
+	Message *T
+}
+
+func (ack *AcknowledgeMessage[T]) Ack()         { ack.acked = true }
+func (ack *AcknowledgeMessage[T]) DidAck() bool { return ack.acked }
+
+type AckTopicsMessages struct {
+	TicketUpdatedMsg  *AcknowledgeMessage[TicketUpdatedMessage]
+	TicketCreatedMsg  *AcknowledgeMessage[TicketCreatedMessage]
+	OrderCreatedMsg   *AcknowledgeMessage[OrderCreatedMessage]
+	OrderCancelledMsg *AcknowledgeMessage[OrderCancelledMessage]
+}
