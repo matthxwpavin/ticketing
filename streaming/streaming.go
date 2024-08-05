@@ -2,6 +2,8 @@ package streaming
 
 import (
 	"context"
+
+	"github.com/matthxwpavin/ticketing/logging/sugar"
 )
 
 type Publisher[T any] interface {
@@ -43,4 +45,13 @@ type AckTopicsMessages struct {
 	TicketCreatedMsg  *AcknowledgeMessage[TicketCreatedMessage]
 	OrderCreatedMsg   *AcknowledgeMessage[OrderCreatedMessage]
 	OrderCancelledMsg *AcknowledgeMessage[OrderCancelledMessage]
+}
+
+func DefaultConsumeErrorHandler(ctx context.Context) ConsumeErrorHandler {
+	return func(unsubscribe Unsubscriber, err error) {
+		logger := sugar.FromContext(ctx)
+		logger.Errorw("could not consume", "error", err)
+		unsubscribe()
+		logger.Infoln("unsubscribed")
+	}
 }
