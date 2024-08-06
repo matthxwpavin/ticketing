@@ -15,4 +15,5 @@ type TicketUpdatedMessage struct {
 	TicketTitle   string  `json:"ticketTitle"`
 	TicketPrice   float64 `json:"ticketPrice"`
 	TicketVersion int32   `json:"ticketVersion"`
+	OrderId       string  `json:"orderId"`
 }

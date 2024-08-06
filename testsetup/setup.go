@@ -52,11 +52,23 @@ func Setup(m *testing.M, conf *mongo.DbConfig, initializer Initializer) {
 		logger.Fatalf("Could not start resource: %s", err)
 	}
 
+	// Defers a function to purge the resource when any panicking occurred
+	// before Main.Run will be executed. Panicking inside of sub-tests(T)
+	// not be recovered by this defer.
+	defer func() {
+		if a := recover(); a != nil {
+			logger.Errorw("a panic recovered", "error", a)
+			purge(ctx, pool, resource)
+			// Re-throw the panic to exit the program with a non-zero code
+			// to mark this test as a failed one.
+			panic(a)
+		}
+	}()
+
 	code, testErr := runTests(ctx, m, pool, resource, conf, initializer)
 	// You can't defer this because os.Exit doesn't care for defer
-	if err := pool.Purge(resource); err != nil {
-		logger.Errorw("could not purge resource", "error", err)
-	}
+	purge(ctx, pool, resource)
+
 	if testErr != nil {
 		os.Exit(1)
 	}
@@ -64,6 +76,17 @@ func Setup(m *testing.M, conf *mongo.DbConfig, initializer Initializer) {
 }
 
 type Initializer func(context.Context, *mongo.DB) error
+
+// purge purges the resources (running container). It usually be called in the last
+// step of testing (before os.Exit with a code produced by Main.Run).
+func purge(ctx context.Context, pool *dockertest.Pool, resource *dockertest.Resource) {
+	logger := sugar.FromContext(ctx)
+	if err := pool.Purge(resource); err != nil {
+		logger.Errorw("could not purge resource", "error", err)
+	} else {
+		logger.Infoln("resources purged")
+	}
+}
 
 func runTests(
 	ctx context.Context,
