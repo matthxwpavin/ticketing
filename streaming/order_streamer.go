@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// Should go to internal sub-package of the orders.
+// TODO: should go to internal sub-package of the orders.
 type OrderStreamer interface {
 	OrderCreatedPublisher(context.Context) (OrderCreatedPublisher, error)
 	OrderCancelledPublisher(context.Context) (OrderCancelledPublisher, error)

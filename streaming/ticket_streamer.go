@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-// Should go to internal sub-package of the tickets.
+// TODO: go to internal sub-package of the tickets.
 type TicketStreamer interface {
 	TicketCreatedPublisher(context.Context) (TicketCreatedPublisher, error)
 	TicketUpdatedPublisher(context.Context) (TicketUpdatedPublisher, error)
