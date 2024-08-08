@@ -42,20 +42,30 @@ func New[T any](
 	}
 }
 
+func (q *Queue[T]) SendImmediatelyMsg(payload *T) error {
+	return q.sendJSON(payload, func(s string) error {
+		return q.q.SendDelayMsg(s, time.Nanosecond)
+	})
+}
+
 func (q *Queue[T]) SendDelayMsg(payload *T, d time.Duration) error {
-	data, err := marshalAsString(payload)
-	if err != nil {
-		return err
-	}
-	return q.q.SendDelayMsg(data, d)
+	return q.sendJSON(payload, func(s string) error {
+		return q.q.SendDelayMsg(s, d)
+	})
 }
 
 func (q *Queue[T]) SendScheduleMsg(payload *T, t time.Time) error {
-	data, err := marshalAsString(payload)
+	return q.sendJSON(payload, func(s string) error {
+		return q.q.SendScheduleMsg(s, t)
+	})
+}
+
+func (q *Queue[T]) sendJSON(payload *T, sender func(string) error) error {
+	data, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
-	return q.q.SendScheduleMsg(data, t)
+	return sender(string(data))
 }
 
 func (q *Queue[T]) Listen(ctx context.Context) <-chan struct{} {
@@ -73,9 +83,4 @@ func applyOptions(q *delayqueue.DelayQueue) *delayqueue.DelayQueue {
 	return q.WithConcurrent(4).
 		WithDefaultRetryCount(3).
 		WithMaxConsumeDuration(6 * time.Minute)
-}
-
-func marshalAsString(a any) (string, error) {
-	data, err := json.Marshal(a)
-	return string(data), err
 }
