@@ -15,7 +15,8 @@ import (
 // When unmarshaling has an error occurred then the queue itself do a good acknowledge(return true)
 // to do not want to consume the message/payload again by re-delivery mechanic.
 type Queue[T any] struct {
-	q *delayqueue.DelayQueue
+	name string
+	q    *delayqueue.DelayQueue
 }
 
 func New[T any](
@@ -25,6 +26,7 @@ func New[T any](
 	process func(*T) bool,
 ) *Queue[T] {
 	return &Queue[T]{
+		name: name,
 		q: applyOptions(delayqueue.NewQueue(name, c, func(payloadStr string) bool {
 			payload := new(T)
 			if err := json.Unmarshal([]byte(payloadStr), payload); err != nil {
@@ -54,6 +56,17 @@ func (q *Queue[T]) SendScheduleMsg(payload *T, t time.Time) error {
 		return err
 	}
 	return q.q.SendScheduleMsg(data, t)
+}
+
+func (q *Queue[T]) Listen(ctx context.Context) <-chan struct{} {
+	go q.waitStop(ctx)
+	return q.q.StartConsume()
+}
+
+func (q *Queue[T]) waitStop(ctx context.Context) {
+	<-ctx.Done()
+	q.q.StopConsume()
+	sugar.FromContext(ctx).Infow("stopped consumption", "queue", q.name)
 }
 
 func applyOptions(q *delayqueue.DelayQueue) *delayqueue.DelayQueue {
