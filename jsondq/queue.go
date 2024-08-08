@@ -27,12 +27,18 @@ func New[T any](
 ) *Queue[T] {
 	return &Queue[T]{
 		name: name,
-		q: applyOptions(delayqueue.NewQueue(name, c, func(payloadStr string) bool {
+		q: applyOptions(delayqueue.NewQueue(name, c, func(payloadStr string) (ack bool) {
+			logger := sugar.FromContext(ctx).With("queue", name)
+			defer func() {
+				if a := recover(); a != nil {
+					logger.Errorw("consume panic", "cause", a)
+					ack = true
+				}
+			}()
+
 			payload := new(T)
 			if err := json.Unmarshal([]byte(payloadStr), payload); err != nil {
-				sugar.FromContext(ctx).
-					With("queue", name).
-					Errorw("could not unmarshal payload", "error", err)
+				logger.Errorw("could not unmarshal payload", "error", err)
 				// Mark the message as acknowleded to don't want to consume again
 				// from re-delivery mechanic, due to the message is invalid JSON.
 				return true
