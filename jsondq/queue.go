@@ -44,7 +44,7 @@ func New[T any](
 
 func (q *Queue[T]) SendImmediatelyMsg(payload *T) error {
 	return q.sendJSON(payload, func(s string) error {
-		return q.q.SendDelayMsg(s, time.Nanosecond)
+		return q.q.SendDelayMsg(s, 0)
 	})
 }
 
