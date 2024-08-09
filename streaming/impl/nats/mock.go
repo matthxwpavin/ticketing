@@ -14,7 +14,7 @@ type MockClient struct {
 }
 
 type topic[T any] struct {
-	msg *streaming.AcknowledgeMessage[T]
+	msg chan *streaming.AcknowledgeMessage[T]
 	pub streaming.Publisher[T]
 	sub streaming.JsonConsumer[T]
 }
@@ -35,100 +35,102 @@ type orderCancelledTopic struct {
 	topic[streaming.OrderCancelledMessage]
 }
 
+func didAck[T any](msgCh <-chan *streaming.AcknowledgeMessage[T]) bool {
+	select {
+	case msg := <-msgCh:
+		return msg.DidAck()
+	default:
+		return false
+	}
+}
+
 func (c *MockClient) DidTicketCreatedMessageAck() bool {
-	return c.ticketCreatedTopic.msg.DidAck()
+	return didAck(c.ticketCreatedTopic.msg)
 }
 
 func (c *MockClient) DidTicketUpdatedMessageAck() bool {
-	return c.ticketUpdatedTopic.msg.DidAck()
+	return didAck(c.ticketUpdatedTopic.msg)
 }
 
 func (c *MockClient) DidOrderCreatedMessageAck() bool {
-	return c.orderCreatedTopic.msg.DidAck()
+	return didAck(c.orderCreatedTopic.msg)
 }
 
 func (c *MockClient) DidOrderCancelledMessageAck() bool {
-	return c.orderCancelledTopic.msg.DidAck()
+	return didAck(c.orderCancelledTopic.msg)
 }
 
 func (c *MockClient) TicketCreatedPublisher(context.Context) (
 	streaming.TicketCreatedPublisher,
 	error,
 ) {
-	c.ticketCreatedTopic.pub = &mockJetStream[streaming.TicketCreatedMessage]{
-		topic: &c.ticketCreatedTopic.topic,
-	}
-	return c.ticketCreatedTopic.pub, nil
+	return initTopic(&c.ticketCreatedTopic.topic).pub, nil
 }
 
 func (c *MockClient) TicketUpdatedPublisher(context.Context) (
 	streaming.TicketUpdatedPublisher,
 	error,
 ) {
-	c.ticketUpdatedTopic.pub = &mockJetStream[streaming.TicketUpdatedMessage]{
-		topic: &c.ticketUpdatedTopic.topic,
-	}
-	return c.ticketUpdatedTopic.pub, nil
+	return initTopic(&c.ticketUpdatedTopic.topic).pub, nil
 }
 
 func (c *MockClient) TicketCreatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
 	streaming.TicketCreatedConsumer,
 	error,
 ) {
-	c.ticketCreatedTopic.sub = &mockJetStream[streaming.TicketCreatedMessage]{
-		topic: &c.ticketCreatedTopic.topic,
-	}
-	return c.ticketCreatedTopic.sub, nil
+	return initTopic(&c.ticketCreatedTopic.topic).sub, nil
 }
 
 func (c *MockClient) TicketUpdatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
 	streaming.TicketUpdateConsumer,
 	error,
 ) {
-	c.ticketUpdatedTopic.sub = &mockJetStream[streaming.TicketUpdatedMessage]{
-		topic: &c.ticketUpdatedTopic.topic,
-	}
-	return c.ticketUpdatedTopic.sub, nil
+	return initTopic(&c.ticketUpdatedTopic.topic).sub, nil
 }
 
 func (c *MockClient) OrderCreatedPublisher(context.Context) (
 	streaming.OrderCreatedPublisher,
 	error,
 ) {
-	c.orderCreatedTopic.pub = &mockJetStream[streaming.OrderCreatedMessage]{
-		topic: &c.orderCreatedTopic.topic,
-	}
-	return c.orderCreatedTopic.pub, nil
+	return initTopic(&c.orderCreatedTopic.topic).pub, nil
 }
 
 func (c *MockClient) OrderCancelledPublisher(context.Context) (
 	streaming.OrderCancelledPublisher,
 	error,
 ) {
-	c.orderCancelledTopic.pub = &mockJetStream[streaming.OrderCancelledMessage]{
-		topic: &c.orderCancelledTopic.topic,
-	}
-	return c.orderCancelledTopic.pub, nil
+	return initTopic(&c.orderCancelledTopic.topic).pub, nil
 }
 
 func (c *MockClient) OrderCreatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
 	streaming.OrderCreatedConsumer,
 	error,
 ) {
-	c.orderCreatedTopic.sub = &mockJetStream[streaming.OrderCreatedMessage]{
-		topic: &c.orderCreatedTopic.topic,
-	}
-	return c.orderCreatedTopic.sub, nil
+	return initTopic(&c.orderCreatedTopic.topic).sub, nil
 }
 
 func (c *MockClient) OrderCancelledConsumer(context.Context, streaming.ConsumeErrorHandler) (
 	streaming.OrderCancelledConsumer,
 	error,
 ) {
-	c.orderCancelledTopic.sub = &mockJetStream[streaming.OrderCancelledMessage]{
-		topic: &c.orderCancelledTopic.topic,
+	return initTopic(&c.orderCancelledTopic.topic).sub, nil
+}
+
+func initTopic[T any](topic *topic[T]) *topic[T] {
+	if topic.sub == nil {
+		topic.sub = &mockJetStream[T]{
+			topic: topic,
+		}
 	}
-	return c.orderCancelledTopic.sub, nil
+	if topic.pub == nil {
+		topic.pub = &mockJetStream[T]{
+			topic: topic,
+		}
+	}
+	if topic.msg == nil {
+		topic.msg = make(chan *streaming.AcknowledgeMessage[T], 1)
+	}
+	return topic
 }
 
 type mockJetStream[T any] struct {
@@ -136,13 +138,14 @@ type mockJetStream[T any] struct {
 }
 
 func (mjs *mockJetStream[T]) Publish(_ context.Context, msg *T) error {
-	mjs.topic.msg = &streaming.AcknowledgeMessage[T]{Message: msg}
+	mjs.topic.msg <- &streaming.AcknowledgeMessage[T]{Message: msg}
 	return nil
 }
 
 func (mjs *mockJetStream[T]) Consume(ctx context.Context, handler streaming.JsonMessageHandler[T]) (streaming.Unsubscriber, error) {
-	if mjs.topic.msg != nil {
-		handler(mjs.topic.msg.Message, func() error { mjs.topic.msg.Ack(); return nil })
-	}
+	go func() {
+		msg := <-mjs.topic.msg
+		handler(msg.Message, func() error { msg.Ack(); mjs.topic.msg <- msg; return nil })
+	}()
 	return nil, nil
 }

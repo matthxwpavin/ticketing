@@ -74,7 +74,7 @@ func (q *Queue[T]) sendJSON(payload *T, sender func(string) error) error {
 	return sender(string(data))
 }
 
-func (q *Queue[T]) Listen(ctx context.Context) <-chan struct{} {
+func (q *Queue[T]) StartConsume(ctx context.Context) <-chan struct{} {
 	go q.waitStop(ctx)
 	return q.q.StartConsume()
 }
