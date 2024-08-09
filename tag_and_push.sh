@@ -10,6 +10,14 @@ fi
 commit_message=$1
 manual_version=$2
 
+# Validate manual version if provided
+if [ ! -z "$manual_version" ]; then
+  if [[ ! $manual_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Error: Provided version is not a valid SemVer format (vMAJOR.MINOR.PATCH)."
+    exit 1
+  fi
+fi
+
 # Add all changes
 git add .
 
@@ -39,11 +47,6 @@ if [ -z "$manual_version" ]; then
     new_tag="v$major.$minor.$patch"
   fi
 else
-  # Validate manual version
-  if [[ ! $manual_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "Error: Provided version is not a valid SemVer format (vMAJOR.MINOR.PATCH)."
-    exit 1
-  fi
   new_tag="$manual_version"
 fi
 
