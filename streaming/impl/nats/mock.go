@@ -128,6 +128,13 @@ func (c *MockClient) ExpirationCompletedConsumer(context.Context, streaming.Cons
 	return initTopic(&c.expirationCompletedTopic.topic).sub, nil
 }
 
+func (c *MockClient) ExpirationCompletedPublisher(context.Context) (
+	streaming.ExpirationCompletedPublisher,
+	error,
+) {
+	return initTopic(&c.expirationCompletedTopic.topic).pub, nil
+}
+
 func initTopic[T any](topic *topic[T]) *topic[T] {
 	if topic.sub == nil {
 		topic.sub = &mockJetStream[T]{
