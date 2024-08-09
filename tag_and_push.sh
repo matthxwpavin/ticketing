@@ -1,22 +1,14 @@
 #!/bin/bash
 
-# Parse options
-while getopts ":m:" opt; do
-  case $opt in
-    m) commit_message="$OPTARG"
-    ;;
-    \?) echo "Invalid option -$OPTARG" >&2
-        exit 1
-    ;;
-  esac
-done
-
 # Check if a commit message was provided
-if [ -z "$commit_message" ]; then
+if [ -z "$1" ]; then
   echo "Error: No commit message provided."
-  echo "Usage: $0 -m \"commit message\""
+  echo "Usage: $0 \"commit message\" [version]"
   exit 1
 fi
+
+commit_message=$1
+manual_version=$2
 
 # Add all changes
 git add .
@@ -24,25 +16,35 @@ git add .
 # Commit with the provided message
 git commit -m "$commit_message"
 
-# Get the latest tag
-latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+# Determine the new tag version
+if [ -z "$manual_version" ]; then
+  # Get the latest tag
+  latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
 
-# If there are no tags, start with v1.0.0
-if [ -z "$latest_tag" ]; then
-  new_tag="v1.0.0"
+  # If there are no tags, start with v1.0.0
+  if [ -z "$latest_tag" ]; then
+    new_tag="v1.0.0"
+  else
+    # Use semver tool or logic to increment the tag
+    # Here we're assuming the format vMAJOR.MINOR.PATCH
+    IFS='.' read -r -a parts <<< "${latest_tag//v/}"
+    major=${parts[0]}
+    minor=${parts[1]}
+    patch=${parts[2]}
+
+    # Increment the patch version
+    patch=$((patch + 1))
+
+    # Form the new tag
+    new_tag="v$major.$minor.$patch"
+  fi
 else
-  # Use semver tool or logic to increment the tag
-  # Here we're assuming the format vMAJOR.MINOR.PATCH
-  IFS='.' read -r -a parts <<< "${latest_tag//v/}"
-  major=${parts[0]}
-  minor=${parts[1]}
-  patch=${parts[2]}
-
-  # Increment the patch version
-  patch=$((patch + 1))
-
-  # Form the new tag
-  new_tag="v$major.$minor.$patch"
+  # Validate manual version
+  if [[ ! $manual_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Error: Provided version is not a valid SemVer format (vMAJOR.MINOR.PATCH)."
+    exit 1
+  fi
+  new_tag="$manual_version"
 fi
 
 echo "Creating new tag: $new_tag"
