@@ -65,6 +65,10 @@ func (c *MockClient) DidOrderCancelledMessageAck() bool {
 	return didAck(c.orderCancelledTopic.msg)
 }
 
+func (c *MockClient) DidExpirationCompletedMessageAck() bool {
+	return didAck(c.expirationCompletedTopic.msg)
+}
+
 func (c *MockClient) TicketCreatedPublisher(context.Context) (
 	streaming.TicketCreatedPublisher,
 	error,
