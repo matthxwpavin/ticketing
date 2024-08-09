@@ -10,4 +10,5 @@ type TicketStreamer interface {
 	TicketUpdatedPublisher(context.Context) (TicketUpdatedPublisher, error)
 	OrderCreatedConsumer(context.Context, ConsumeErrorHandler) (OrderCreatedConsumer, error)
 	OrderCancelledConsumer(context.Context, ConsumeErrorHandler) (OrderCancelledConsumer, error)
+	ExpirationCompletedConsumer(context.Context, ConsumeErrorHandler) (ExpirationCompletedConsumer, error)
 }

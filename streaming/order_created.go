@@ -1,16 +1,15 @@
 package streaming
 
 import (
-	"context"
 	"time"
 )
 
 type OrderCreatedPublisher interface {
-	Publish(context.Context, *OrderCreatedMessage) error
+	Publisher[OrderCreatedMessage]
 }
 
 type OrderCreatedConsumer interface {
-	Consume(context.Context, JsonMessageHandler[OrderCreatedMessage]) (Unsubscriber, error)
+	JsonConsumer[OrderCreatedMessage]
 }
 
 type OrderCreatedMessage struct {

@@ -1,15 +1,11 @@
 package streaming
 
-import (
-	"context"
-)
-
 type OrderCancelledPublisher interface {
-	Publish(context.Context, *OrderCancelledMessage) error
+	Publisher[OrderCancelledMessage]
 }
 
 type OrderCancelledConsumer interface {
-	Consume(context.Context, JsonMessageHandler[OrderCancelledMessage]) (Unsubscriber, error)
+	JsonConsumer[OrderCancelledMessage]
 }
 
 type OrderCancelledMessage struct {

@@ -7,10 +7,11 @@ import (
 )
 
 type MockClient struct {
-	ticketCreatedTopic  ticketCreatedTopic
-	ticketUpdatedTopic  ticketUpdatedTopic
-	orderCreatedTopic   orderCreatedTopic
-	orderCancelledTopic orderCancelledTopic
+	ticketCreatedTopic       ticketCreatedTopic
+	ticketUpdatedTopic       ticketUpdatedTopic
+	orderCreatedTopic        orderCreatedTopic
+	orderCancelledTopic      orderCancelledTopic
+	expirationCompletedTopic expirationCompletedTopic
 }
 
 type topic[T any] struct {
@@ -33,6 +34,10 @@ type orderCreatedTopic struct {
 
 type orderCancelledTopic struct {
 	topic[streaming.OrderCancelledMessage]
+}
+
+type expirationCompletedTopic struct {
+	topic[streaming.ExpirationCompletedMessage]
 }
 
 func didAck[T any](msgCh <-chan *streaming.AcknowledgeMessage[T]) bool {
@@ -114,6 +119,13 @@ func (c *MockClient) OrderCancelledConsumer(context.Context, streaming.ConsumeEr
 	error,
 ) {
 	return initTopic(&c.orderCancelledTopic.topic).sub, nil
+}
+
+func (c *MockClient) ExpirationCompletedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+	streaming.ExpirationCompletedConsumer,
+	error,
+) {
+	return initTopic(&c.expirationCompletedTopic.topic).sub, nil
 }
 
 func initTopic[T any](topic *topic[T]) *topic[T] {

@@ -1,13 +1,11 @@
 package streaming
 
-import "context"
-
 type TicketUpdatedPublisher interface {
-	Publish(context.Context, *TicketUpdatedMessage) error
+	Publisher[TicketUpdatedMessage]
 }
 
 type TicketUpdateConsumer interface {
-	Consume(context.Context, JsonMessageHandler[TicketUpdatedMessage]) (Unsubscriber, error)
+	JsonConsumer[TicketUpdatedMessage]
 }
 
 type TicketUpdatedMessage struct {
