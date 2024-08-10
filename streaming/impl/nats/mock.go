@@ -49,6 +49,10 @@ func didAck[T any](msgCh <-chan *streaming.AcknowledgeMessage[T]) bool {
 	}
 }
 
+func (c *MockClient) Disconenct(context.Context) error {
+	return nil
+}
+
 func (c *MockClient) DidTicketCreatedMessageAck() bool {
 	return didAck(c.ticketCreatedTopic.msg)
 }

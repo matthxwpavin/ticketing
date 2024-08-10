@@ -12,14 +12,15 @@ import (
 )
 
 type Client struct {
-	URL  string // Not required to be a property due to there is no sub-type of the Client.
-	Name string // Not required to be a property due to there is no sub-type of the Client.
-	conn *nats.Conn
+	URL          string // Not required to be a property due to there is no sub-type of the Client.
+	Name         string // Not required to be a property due to there is no sub-type of the Client.
+	ConsumerName string
+	conn         *nats.Conn
 }
 
 // Not required to be a property due to there is no sub-type of the Client.
-func NewFromEnv(ctx context.Context) *Client {
-	return &Client{URL: env.NatsURL(), Name: env.NatsConnectionName()}
+func NewFromEnv(ctx context.Context, consumerName string) *Client {
+	return &Client{URL: env.NatsURL(), Name: env.NatsConnectionName(), ConsumerName: consumerName}
 }
 
 type ConnectOption func(*Client)
@@ -28,12 +29,15 @@ func WithConnectionName(name string) ConnectOption {
 	return func(c *Client) { c.Name = name }
 }
 
-func Connect(ctx context.Context, url string, opts ...ConnectOption) (*Client, error) {
-	return connect(ctx, &Client{URL: url}, opts...)
+func Connect(ctx context.Context, url string, consumerName string, opts ...ConnectOption) (*Client, error) {
+	return connect(ctx, &Client{
+		URL:          url,
+		ConsumerName: consumerName,
+	}, opts...)
 }
 
-func ConnectFromEnv(ctx context.Context, opts ...ConnectOption) (*Client, error) {
-	return connect(ctx, NewFromEnv(ctx), opts...)
+func ConnectFromEnv(ctx context.Context, consumerName string, opts ...ConnectOption) (*Client, error) {
+	return connect(ctx, NewFromEnv(ctx, consumerName), opts...)
 }
 
 func connect(ctx context.Context, c *Client, opts ...ConnectOption) (*Client, error) {
@@ -72,8 +76,9 @@ func (c *Client) Disconenct(ctx context.Context) error {
 }
 
 type subject[T any] struct {
-	name       string
-	streamName string
+	name         string
+	streamName   string
+	consumerName string
 }
 
 func (s *subject[T]) publisher(ctx context.Context, conn *nats.Conn) (streaming.Publisher[T], error) {
@@ -84,9 +89,10 @@ func (s *subject[T]) publisher(ctx context.Context, conn *nats.Conn) (streaming.
 		return nil, err
 	}
 	return &jetStream[T]{
-		name:    s.streamName,
-		subject: s.name,
-		js:      js,
+		name:         s.streamName,
+		subject:      s.name,
+		consumerName: s.consumerName,
+		js:           js,
 	}, nil
 }
 
@@ -116,7 +122,7 @@ func (s *subject[_]) createConsumerIfNotExist(
 		return nil, err
 	}
 	logger = logger.With("stream_name", s.streamName, "subject", s.name)
-	cmr, err := js.Consumer(ctx, s.streamName, s.name)
+	cmr, err := js.Consumer(ctx, s.streamName, s.consumerName)
 	notfound := err == jetstream.ErrConsumerNotFound
 	if err != nil && !notfound {
 		logger.Errorw("could not get a consumer", "error", err)
@@ -127,7 +133,7 @@ func (s *subject[_]) createConsumerIfNotExist(
 			ctx,
 			s.streamName,
 			jetstream.ConsumerConfig{
-				Durable:       s.name,
+				Durable:       s.consumerName,
 				AckPolicy:     jetstream.AckExplicitPolicy,
 				DeliverPolicy: jetstream.DeliverAllPolicy,
 			},
@@ -201,9 +207,10 @@ func createStreamIfNotExist(ctx context.Context, conn *nats.Conn, name string, s
 }
 
 type jetStream[T any] struct {
-	name    string
-	subject string
-	js      jetstream.JetStream
+	name         string
+	subject      string
+	consumerName string
+	js           jetstream.JetStream
 }
 
 func (js *jetStream[T]) Publish(ctx context.Context, message *T) error {

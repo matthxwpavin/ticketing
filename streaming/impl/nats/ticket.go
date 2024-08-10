@@ -6,41 +6,46 @@ import (
 	"github.com/matthxwpavin/ticketing/streaming"
 )
 
-var (
-	ticketCreated = &subject[streaming.TicketCreatedMessage]{
-		name:       "ticket:created",
-		streamName: "ticket:created",
+func (c *Client) ticketCreatedSubject() *subject[streaming.TicketCreatedMessage] {
+	return &subject[streaming.TicketCreatedMessage]{
+		name:         "ticket:created",
+		streamName:   "ticket:created",
+		consumerName: c.ConsumerName,
 	}
-	ticketUpdated = &subject[streaming.TicketUpdatedMessage]{
-		name:       "ticket:updated",
-		streamName: "ticket:updated",
+}
+
+func (c *Client) ticketUpdatedSubject() *subject[streaming.TicketUpdatedMessage] {
+	return &subject[streaming.TicketUpdatedMessage]{
+		name:         "ticket:updated",
+		streamName:   "ticket:updated",
+		consumerName: c.ConsumerName,
 	}
-)
+}
 
 func (c *Client) TicketCreatedPublisher(ctx context.Context) (
 	streaming.TicketCreatedPublisher,
 	error,
 ) {
-	return ticketCreated.publisher(ctx, c.conn)
+	return c.ticketCreatedSubject().publisher(ctx, c.conn)
 }
 
 func (c *Client) TicketCreatedConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
 	streaming.TicketCreatedConsumer,
 	error,
 ) {
-	return ticketCreated.jsonConsumer(ctx, c.conn, errHandler)
+	return c.ticketCreatedSubject().jsonConsumer(ctx, c.conn, errHandler)
 }
 
 func (c *Client) TicketUpdatedPublisher(ctx context.Context) (
 	streaming.TicketUpdatedPublisher,
 	error,
 ) {
-	return ticketUpdated.publisher(ctx, c.conn)
+	return c.ticketUpdatedSubject().publisher(ctx, c.conn)
 }
 
 func (c *Client) TicketUpdatedConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
 	streaming.TicketUpdateConsumer,
 	error,
 ) {
-	return ticketUpdated.jsonConsumer(ctx, c.conn, errHandler)
+	return c.ticketUpdatedSubject().jsonConsumer(ctx, c.conn, errHandler)
 }
