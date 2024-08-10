@@ -17,6 +17,11 @@ type JsonConsumer[T any] interface {
 	Consume(context.Context, JsonMessageHandler[T]) (Unsubscriber, error)
 }
 
+type StreamConfig struct {
+	Name     string
+	Subjects []string
+}
+
 type AckFunc func() error
 
 type MessgeHadler func([]byte, AckFunc)
@@ -55,3 +60,26 @@ func DefaultConsumeErrorHandler(ctx context.Context) ConsumeErrorHandler {
 		logger.Infoln("unsubscribed")
 	}
 }
+
+var (
+	TicketCreatedStreamConfig = &StreamConfig{
+		Name:     "ticket:created",
+		Subjects: []string{"ticket:created:1"},
+	}
+	TicketUpdatedStreamConfig = &StreamConfig{
+		Name:     "ticket:updated",
+		Subjects: []string{"ticket:updated:1"},
+	}
+	OrderCreatedStreamConfig = &StreamConfig{
+		Name:     "order:created",
+		Subjects: []string{"order:created:1", "order:created:2"},
+	}
+	OrderCanceledStreamConfig = &StreamConfig{
+		Name:     "order:canceled",
+		Subjects: []string{"order:canceled:1", "order:canceled:2"},
+	}
+	ExpirationCompletedStreamConfig = &StreamConfig{
+		Name:     "expiration:completed",
+		Subjects: []string{"expiration:completed:1"},
+	}
+)

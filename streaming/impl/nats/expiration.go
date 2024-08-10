@@ -6,25 +6,30 @@ import (
 	"github.com/matthxwpavin/ticketing/streaming"
 )
 
-func (c *Client) expirationCompletedSubject() *subject[streaming.ExpirationCompletedMessage] {
-	return &subject[streaming.ExpirationCompletedMessage]{
-		names:           []string{"expiration:completed"},
-		streamName:      "expiration:completed",
-		consumerName:    c.ConsumerName,
-		consumerSubject: c.ConsumerSubject,
-	}
-}
-
-func (c *Client) ExpirationCompletedConsumer(ctx context.Context, errHandler streaming.ConsumeErrorHandler) (
+func (c *Client) ExpirationCompletedConsumer(
+	ctx context.Context,
+	errHandler streaming.ConsumeErrorHandler,
+	filterSubjects ...string,
+) (
 	streaming.ExpirationCompletedConsumer,
 	error,
 ) {
-	return c.expirationCompletedSubject().jsonConsumer(ctx, c.conn, errHandler)
+	return consumer[streaming.ExpirationCompletedMessage](
+		ctx,
+		c,
+		streaming.ExpirationCompletedStreamConfig,
+		errHandler,
+		filterSubjects...,
+	)
 }
 
 func (c *Client) ExpirationCompletedPublisher(ctx context.Context) (
 	streaming.ExpirationCompletedPublisher,
 	error,
 ) {
-	return c.expirationCompletedSubject().publisher(ctx, c.conn)
+	return createStreamIfNotExist[streaming.ExpirationCompletedMessage](
+		ctx,
+		c.conn,
+		streaming.ExpirationCompletedStreamConfig,
+	)
 }

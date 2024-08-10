@@ -12,20 +12,18 @@ import (
 )
 
 type Client struct {
-	URL             string // Not required to be a property due to there is no sub-type of the Client.
-	Name            string // Not required to be a property due to there is no sub-type of the Client.
-	ConsumerName    string
-	ConsumerSubject string
-	conn            *nats.Conn
+	URL          string // Not required to be a property due to there is no sub-type of the Client.
+	Name         string // Not required to be a property due to there is no sub-type of the Client.
+	ConsumerName string
+	conn         *nats.Conn
 }
 
 // Not required to be a property due to there is no sub-type of the Client.
-func NewFromEnv(ctx context.Context, consumerName string, consumerSubject string) *Client {
+func NewFromEnv(ctx context.Context, consumerName string) *Client {
 	return &Client{
-		URL:             env.NatsURL(),
-		Name:            env.NatsConnectionName(),
-		ConsumerName:    consumerName,
-		ConsumerSubject: consumerSubject,
+		URL:          env.NatsURL(),
+		Name:         env.NatsConnectionName(),
+		ConsumerName: consumerName,
 	}
 }
 
@@ -40,23 +38,20 @@ func Connect(
 	url string,
 	name string,
 	consumerName string,
-	consumerSubject string,
 	opts ...ConnectOption,
 ) (*Client, error) {
 	return connect(ctx, &Client{
-		URL:             url,
-		ConsumerName:    consumerName,
-		ConsumerSubject: consumerSubject,
+		URL:          url,
+		ConsumerName: consumerName,
 	}, opts...)
 }
 
 func ConnectFromEnv(
 	ctx context.Context,
 	consumerName string,
-	consumerSubject string,
 	opts ...ConnectOption,
 ) (*Client, error) {
-	return connect(ctx, NewFromEnv(ctx, consumerName, consumerSubject), opts...)
+	return connect(ctx, NewFromEnv(ctx, consumerName), opts...)
 }
 
 func connect(ctx context.Context, c *Client, opts ...ConnectOption) (*Client, error) {
@@ -94,78 +89,6 @@ func (c *Client) Disconenct(ctx context.Context) error {
 	return nil
 }
 
-type subject[T any] struct {
-	names           []string
-	streamName      string
-	consumerName    string
-	consumerSubject string
-}
-
-func (s *subject[T]) publisher(ctx context.Context, conn *nats.Conn) (streaming.Publisher[T], error) {
-	logger := sugar.FromContext(ctx)
-	js, err := createStreamIfNotExist(ctx, conn, s.streamName, s.names)
-	if err != nil {
-		logger.Errorw("could not create stream", "error", err)
-		return nil, err
-	}
-	return &jetStream[T]{
-		name:         s.streamName,
-		subjects:     s.names,
-		consumerName: s.consumerName,
-		js:           js,
-	}, nil
-}
-
-func (s *subject[T]) jsonConsumer(
-	ctx context.Context,
-	conn *nats.Conn,
-	errHandler streaming.ConsumeErrorHandler,
-) (streaming.JsonConsumer[T], error) {
-	cmr, err := s.createConsumerIfNotExist(ctx, conn)
-	if err != nil {
-		return nil, err
-	}
-	return &jsonConsumer[T]{
-		Consumer:   cmr,
-		errHandler: errHandler,
-	}, nil
-}
-
-func (s *subject[_]) createConsumerIfNotExist(
-	ctx context.Context,
-	conn *nats.Conn,
-) (jetstream.Consumer, error) {
-	logger := sugar.FromContext(ctx)
-	js, err := createStreamIfNotExist(ctx, conn, s.streamName, s.names)
-	if err != nil {
-		logger.Errorw("could not create stream", "error", err)
-		return nil, err
-	}
-	logger = logger.With("stream_name", s.streamName, "subject", s.names)
-	cmr, err := js.Consumer(ctx, s.streamName, s.consumerName)
-	notfound := err == jetstream.ErrConsumerNotFound
-	if err != nil && !notfound {
-		logger.Errorw("could not get a consumer", "error", err)
-		return nil, err
-	}
-	if notfound {
-		cmr, err = js.CreateConsumer(
-			ctx,
-			s.streamName,
-			jetstream.ConsumerConfig{
-				Durable:       s.consumerName,
-				AckPolicy:     jetstream.AckExplicitPolicy,
-				DeliverPolicy: jetstream.DeliverAllPolicy,
-				FilterSubject: s.consumerSubject,
-			},
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return cmr, nil
-}
-
 type jsonConsumer[T any] struct {
 	errHandler streaming.ConsumeErrorHandler
 	jetstream.Consumer
@@ -198,7 +121,7 @@ func consume(
 	return func() { cctx.Drain(); cctx.Stop() }, err
 }
 
-func createStreamIfNotExist(ctx context.Context, conn *nats.Conn, name string, subjects []string) (jetstream.JetStream, error) {
+func createStreamIfNotExist[T any](ctx context.Context, conn *nats.Conn, streamConfig *streaming.StreamConfig) (*jetStream[T], error) {
 	logger := sugar.FromContext(ctx)
 
 	js, err := jetstream.New(conn)
@@ -206,32 +129,68 @@ func createStreamIfNotExist(ctx context.Context, conn *nats.Conn, name string, s
 		logger.Errorw("unable to new jetstream", "error", err)
 		return nil, err
 	}
-	_, err = js.Stream(ctx, name)
+	_, err = js.Stream(ctx, streamConfig.Name)
 	notfound := err == jetstream.ErrStreamNotFound
 
 	if err != nil && !notfound {
-		logger.Errorw("unable to get stream", "error", err, "name", name)
+		logger.Errorw("unable to get stream", "error", err, "name", streamConfig.Name)
 		return nil, err
 	}
 	if notfound {
 		_, err := js.CreateStream(ctx, jetstream.StreamConfig{
-			Name:      name,
-			Subjects:  subjects,
+			Name:      streamConfig.Name,
+			Subjects:  streamConfig.Subjects,
 			Retention: jetstream.WorkQueuePolicy,
 		})
 		if err != nil {
-			logger.Errorw("could not create stream", "error", err, "name", name)
+			logger.Errorw("could not create stream", "error", err, "name", streamConfig.Name)
 			return nil, err
 		}
 	}
-	return js, nil
+	return &jetStream[T]{
+		name:     streamConfig.Name,
+		subjects: streamConfig.Subjects,
+	}, nil
 }
 
 type jetStream[T any] struct {
-	name         string
-	subjects     []string
-	consumerName string
-	js           jetstream.JetStream
+	name     string
+	subjects []string
+	js       jetstream.JetStream
+}
+
+func (js *jetStream[T]) consumer(
+	ctx context.Context,
+	consumerName string,
+	errHandler streaming.ConsumeErrorHandler,
+	filterSubjects ...string,
+) (*jsonConsumer[T], error) {
+	logger := sugar.FromContext(ctx)
+	cmr, err := js.js.Consumer(ctx, js.name, consumerName)
+	notfound := err == jetstream.ErrConsumerNotFound
+	if err != nil && !notfound {
+		logger.Errorw("could not get a consumer", "error", err)
+		return nil, err
+	}
+	if notfound {
+		cmr, err = js.js.CreateConsumer(
+			ctx,
+			js.name,
+			jetstream.ConsumerConfig{
+				Durable:        consumerName,
+				AckPolicy:      jetstream.AckExplicitPolicy,
+				DeliverPolicy:  jetstream.DeliverAllPolicy,
+				FilterSubjects: filterSubjects,
+			},
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &jsonConsumer[T]{
+		Consumer:   cmr,
+		errHandler: errHandler,
+	}, nil
 }
 
 func (js *jetStream[T]) Publish(ctx context.Context, message *T) error {

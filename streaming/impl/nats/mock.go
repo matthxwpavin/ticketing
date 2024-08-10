@@ -87,14 +87,14 @@ func (c *MockClient) TicketUpdatedPublisher(context.Context) (
 	return initTopic(&c.ticketUpdatedTopic.topic).pub, nil
 }
 
-func (c *MockClient) TicketCreatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+func (c *MockClient) TicketCreatedConsumer(context.Context, streaming.ConsumeErrorHandler, ...string) (
 	streaming.TicketCreatedConsumer,
 	error,
 ) {
 	return initTopic(&c.ticketCreatedTopic.topic).sub, nil
 }
 
-func (c *MockClient) TicketUpdatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+func (c *MockClient) TicketUpdatedConsumer(context.Context, streaming.ConsumeErrorHandler, ...string) (
 	streaming.TicketUpdateConsumer,
 	error,
 ) {
@@ -115,21 +115,21 @@ func (c *MockClient) OrderCancelledPublisher(context.Context) (
 	return initTopic(&c.orderCancelledTopic.topic).pub, nil
 }
 
-func (c *MockClient) OrderCreatedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+func (c *MockClient) OrderCreatedConsumer(context.Context, streaming.ConsumeErrorHandler, ...string) (
 	streaming.OrderCreatedConsumer,
 	error,
 ) {
 	return initTopic(&c.orderCreatedTopic.topic).sub, nil
 }
 
-func (c *MockClient) OrderCancelledConsumer(context.Context, streaming.ConsumeErrorHandler) (
+func (c *MockClient) OrderCancelledConsumer(context.Context, streaming.ConsumeErrorHandler, ...string) (
 	streaming.OrderCancelledConsumer,
 	error,
 ) {
 	return initTopic(&c.orderCancelledTopic.topic).sub, nil
 }
 
-func (c *MockClient) ExpirationCompletedConsumer(context.Context, streaming.ConsumeErrorHandler) (
+func (c *MockClient) ExpirationCompletedConsumer(context.Context, streaming.ConsumeErrorHandler, ...string) (
 	streaming.ExpirationCompletedConsumer,
 	error,
 ) {

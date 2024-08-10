@@ -8,7 +8,7 @@ import (
 type TicketStreamer interface {
 	TicketCreatedPublisher(context.Context) (TicketCreatedPublisher, error)
 	TicketUpdatedPublisher(context.Context) (TicketUpdatedPublisher, error)
-	OrderCreatedConsumer(context.Context, ConsumeErrorHandler) (OrderCreatedConsumer, error)
-	OrderCancelledConsumer(context.Context, ConsumeErrorHandler) (OrderCancelledConsumer, error)
-	ExpirationCompletedConsumer(context.Context, ConsumeErrorHandler) (ExpirationCompletedConsumer, error)
+	OrderCreatedConsumer(context.Context, ConsumeErrorHandler, ...string) (OrderCreatedConsumer, error)
+	OrderCancelledConsumer(context.Context, ConsumeErrorHandler, ...string) (OrderCancelledConsumer, error)
+	ExpirationCompletedConsumer(context.Context, ConsumeErrorHandler, ...string) (ExpirationCompletedConsumer, error)
 }
