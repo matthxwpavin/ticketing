@@ -16,7 +16,7 @@ func (c *Client) TicketCreatedPublisher(ctx context.Context) (
 func (c *Client) TicketCreatedConsumer(
 	ctx context.Context,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
+	filterSubject string,
 ) (
 	streaming.TicketCreatedConsumer,
 	error,
@@ -26,7 +26,7 @@ func (c *Client) TicketCreatedConsumer(
 		c,
 		streaming.TicketCreatedStreamConfig,
 		errHandler,
-		filterSubjects...,
+		filterSubject,
 	)
 }
 
@@ -44,7 +44,7 @@ func (c *Client) TicketUpdatedPublisher(ctx context.Context) (
 func (c *Client) TicketUpdatedConsumer(
 	ctx context.Context,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
+	filterSubject string,
 ) (
 	streaming.TicketUpdateConsumer,
 	error,
@@ -54,6 +54,6 @@ func (c *Client) TicketUpdatedConsumer(
 		c,
 		streaming.TicketUpdatedStreamConfig,
 		errHandler,
-		filterSubjects...,
+		filterSubject,
 	)
 }

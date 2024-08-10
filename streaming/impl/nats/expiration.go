@@ -9,7 +9,7 @@ import (
 func (c *Client) ExpirationCompletedConsumer(
 	ctx context.Context,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
+	filterSubject string,
 ) (
 	streaming.ExpirationCompletedConsumer,
 	error,
@@ -19,7 +19,7 @@ func (c *Client) ExpirationCompletedConsumer(
 		c,
 		streaming.ExpirationCompletedStreamConfig,
 		errHandler,
-		filterSubjects...,
+		filterSubject,
 	)
 }
 

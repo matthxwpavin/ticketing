@@ -20,7 +20,7 @@ func (c *Client) OrderCreatedPublisher(ctx context.Context) (
 func (c *Client) OrderCreatedConsumer(
 	ctx context.Context,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string) (
+	filterSubject string) (
 	streaming.OrderCreatedConsumer,
 	error,
 ) {
@@ -29,7 +29,7 @@ func (c *Client) OrderCreatedConsumer(
 		c,
 		streaming.OrderCreatedStreamConfig,
 		errHandler,
-		filterSubjects...,
+		filterSubject,
 	)
 }
 
@@ -47,7 +47,7 @@ func (c *Client) OrderCancelledPublisher(ctx context.Context) (
 func (c *Client) OrderCancelledConsumer(
 	ctx context.Context,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
+	filterSubject string,
 ) (
 	streaming.OrderCancelledConsumer,
 	error,
@@ -57,6 +57,6 @@ func (c *Client) OrderCancelledConsumer(
 		c,
 		streaming.OrderCanceledStreamConfig,
 		errHandler,
-		filterSubjects...,
+		filterSubject,
 	)
 }

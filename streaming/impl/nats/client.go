@@ -3,7 +3,6 @@ package nats
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/matthxwpavin/ticketing/env"
 	"github.com/matthxwpavin/ticketing/logging/sugar"
@@ -95,13 +94,13 @@ func consumer[T any](
 	c *Client,
 	config *streaming.StreamConfig,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
+	filterSubject string,
 ) (*jsonConsumer[T], error) {
 	js, err := createStreamIfNotExist[T](ctx, c.conn, config)
 	if err != nil {
 		return nil, err
 	}
-	return js.consumer(ctx, c.ConsumerName, errHandler, filterSubjects...)
+	return js.consumer(ctx, c.ConsumerName, errHandler, filterSubject)
 }
 
 type jsonConsumer[T any] struct {
@@ -179,27 +178,24 @@ func (js *jetStream[T]) consumer(
 	ctx context.Context,
 	consumerName string,
 	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
+	filterSubject string,
 ) (*jsonConsumer[T], error) {
 	logger := sugar.FromContext(ctx)
-	fmt.Println("consumer name:", consumerName)
 	cmr, err := js.js.Consumer(ctx, js.name, consumerName)
 	notfound := err == jetstream.ErrConsumerNotFound
 	if err != nil && !notfound {
 		logger.Errorw("could not get a consumer", "error", err)
 		return nil, err
 	}
-	fmt.Println("not found:", notfound)
-	fmt.Println("filterSubjects", filterSubjects)
 	if notfound {
 		cmr, err = js.js.CreateConsumer(
 			ctx,
 			js.name,
 			jetstream.ConsumerConfig{
-				Durable:        consumerName,
-				AckPolicy:      jetstream.AckExplicitPolicy,
-				DeliverPolicy:  jetstream.DeliverAllPolicy,
-				FilterSubjects: filterSubjects,
+				Durable:       consumerName,
+				AckPolicy:     jetstream.AckExplicitPolicy,
+				DeliverPolicy: jetstream.DeliverAllPolicy,
+				FilterSubject: filterSubject,
 			},
 		)
 		if err != nil {
