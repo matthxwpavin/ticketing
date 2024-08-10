@@ -8,17 +8,19 @@ import (
 
 func (c *Client) ticketCreatedSubject() *subject[streaming.TicketCreatedMessage] {
 	return &subject[streaming.TicketCreatedMessage]{
-		names:        []string{"ticket:created"},
-		streamName:   "ticket:created",
-		consumerName: c.ConsumerName,
+		names:           []string{"ticket:created"},
+		streamName:      "ticket:created",
+		consumerName:    c.ConsumerName,
+		consumerSubject: c.ConsumerSubject,
 	}
 }
 
 func (c *Client) ticketUpdatedSubject() *subject[streaming.TicketUpdatedMessage] {
 	return &subject[streaming.TicketUpdatedMessage]{
-		names:        []string{"ticket:updated"},
-		streamName:   "ticket:updated",
-		consumerName: c.ConsumerName,
+		names:           []string{"ticket:updated"},
+		streamName:      "ticket:updated",
+		consumerName:    c.ConsumerName,
+		consumerSubject: c.ConsumerSubject,
 	}
 }
 

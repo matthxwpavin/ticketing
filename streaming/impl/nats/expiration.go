@@ -8,9 +8,10 @@ import (
 
 func (c *Client) expirationCompletedSubject() *subject[streaming.ExpirationCompletedMessage] {
 	return &subject[streaming.ExpirationCompletedMessage]{
-		names:        []string{"expiration:completed"},
-		streamName:   "expiration:completed",
-		consumerName: c.ConsumerName,
+		names:           []string{"expiration:completed"},
+		streamName:      "expiration:completed",
+		consumerName:    c.ConsumerName,
+		consumerSubject: c.ConsumerSubject,
 	}
 }
 
