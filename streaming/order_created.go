@@ -13,13 +13,13 @@ type OrderCreatedConsumer interface {
 }
 
 type OrderCreatedMessage struct {
-	OrderId   string    `json:"orderId"`
-	Status    string    `json:"orderStatus"`
-	Version   int32     `json:"version"`
-	ExpiresAt time.Time `json:"expiresAt"`
-	Ticket    struct {
+	OrderId        string    `json:"orderId"`
+	OrderStatus    string    `json:"orderStatus"`
+	OrderVersion   int32     `json:"version"`
+	OrderExpiresAt time.Time `json:"expiresAt"`
+	Ticket         struct {
 		Id    string  `json:"id"`
 		Price float64 `json:"price"`
 	} `json:"ticket"`
-	UserId string `json:"user_id"`
+	OrderUserId string `json:"user_id"`
 }
