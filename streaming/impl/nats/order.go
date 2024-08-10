@@ -8,7 +8,7 @@ import (
 
 func (c *Client) orderCreatedSubject() *subject[streaming.OrderCreatedMessage] {
 	return &subject[streaming.OrderCreatedMessage]{
-		name:         "order:created",
+		names:        []string{streaming.OrderCreatedSubject1, streaming.OrderCreatedSubject2},
 		streamName:   "order:created",
 		consumerName: c.ConsumerName,
 	}
@@ -16,7 +16,7 @@ func (c *Client) orderCreatedSubject() *subject[streaming.OrderCreatedMessage] {
 
 func (c *Client) orderCanceledSubject() *subject[streaming.OrderCancelledMessage] {
 	return &subject[streaming.OrderCancelledMessage]{
-		name:         "order:canceled",
+		names:        []string{"order:canceled"},
 		streamName:   "order:canceled",
 		consumerName: c.ConsumerName,
 	}

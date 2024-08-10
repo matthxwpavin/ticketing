@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+const (
+	OrderCreatedSubject1 = "order:created:1"
+	OrderCreatedSubject2 = "order:created:2"
+)
+
 type OrderCreatedPublisher interface {
 	Publisher[OrderCreatedMessage]
 }
