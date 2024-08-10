@@ -57,17 +57,3 @@ func (c *Client) TicketUpdatedConsumer(
 		filterSubjects...,
 	)
 }
-
-func consumer[T any](
-	ctx context.Context,
-	c *Client,
-	config *streaming.StreamConfig,
-	errHandler streaming.ConsumeErrorHandler,
-	filterSubjects ...string,
-) (*jsonConsumer[T], error) {
-	js, err := createStreamIfNotExist[T](ctx, c.conn, config)
-	if err != nil {
-		return nil, err
-	}
-	return js.consumer(ctx, c.ConsumerName, errHandler, filterSubjects...)
-}
