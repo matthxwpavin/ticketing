@@ -148,6 +148,7 @@ func createStreamIfNotExist[T any](ctx context.Context, conn *nats.Conn, streamC
 		}
 	}
 	return &jetStream[T]{
+		js:       js,
 		name:     streamConfig.Name,
 		subjects: streamConfig.Subjects,
 	}, nil
