@@ -29,7 +29,7 @@ func WithConnectionName(name string) ConnectOption {
 	return func(c *Client) { c.Name = name }
 }
 
-func Connect(ctx context.Context, url string, consumerName string, opts ...ConnectOption) (*Client, error) {
+func Connect(ctx context.Context, url string, name string, consumerName string, opts ...ConnectOption) (*Client, error) {
 	return connect(ctx, &Client{
 		URL:          url,
 		ConsumerName: consumerName,
