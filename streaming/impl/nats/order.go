@@ -17,10 +17,13 @@ func (c *Client) orderCreatedSubject() *subject[streaming.OrderCreatedMessage] {
 
 func (c *Client) orderCanceledSubject() *subject[streaming.OrderCancelledMessage] {
 	return &subject[streaming.OrderCancelledMessage]{
-		names:           []string{"order:canceled"},
-		streamName:      "order:canceled",
-		consumerName:    c.ConsumerName,
-		consumerSubject: c.ConsumerSubject,
+		names:        []string{"order:canceled"},
+		streamName:   "order:canceled",
+		consumerName: c.ConsumerName,
+		// TODO: we must think to isolate consumer subject configuration.
+		// For example, a consumer subject belong to at most one stream.
+		// Now ConsumerSubject is a generic one, the subject is used to multiple streams.
+		// consumerSubject: c.ConsumerSubject,
 	}
 }
 
