@@ -72,14 +72,18 @@ var (
 	}
 	OrderCreatedStreamConfig = &StreamConfig{
 		Name:     "order:created",
-		Subjects: []string{"order:created:1", "order:created:2"},
+		Subjects: []string{"order:created:1", "order:created:2", "order:created:3"},
 	}
 	OrderCanceledStreamConfig = &StreamConfig{
 		Name:     "order:canceled",
-		Subjects: []string{"order:canceled:1", "order:canceled:2"},
+		Subjects: []string{"order:canceled:1", "order:canceled:2", "order:canceled:3"},
 	}
 	ExpirationCompletedStreamConfig = &StreamConfig{
 		Name:     "expiration:completed",
 		Subjects: []string{"expiration:completed:1"},
+	}
+	ChargeCreatedStreamConfig = &StreamConfig{
+		Name:     "charge:created",
+		Subjects: []string{},
 	}
 )

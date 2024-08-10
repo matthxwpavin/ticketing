@@ -12,6 +12,7 @@ type MockClient struct {
 	orderCreatedTopic        orderCreatedTopic
 	orderCancelledTopic      orderCancelledTopic
 	expirationCompletedTopic expirationCompletedTopic
+	chargeCreatedTopic       chargeCreatedTopic
 }
 
 type topic[T any] struct {
@@ -38,6 +39,10 @@ type orderCancelledTopic struct {
 
 type expirationCompletedTopic struct {
 	topic[streaming.ExpirationCompletedMessage]
+}
+
+type chargeCreatedTopic struct {
+	topic[streaming.ChargeCreatedMessage]
 }
 
 func didAck[T any](msgCh <-chan *streaming.AcknowledgeMessage[T]) bool {
@@ -141,6 +146,20 @@ func (c *MockClient) ExpirationCompletedPublisher(context.Context) (
 	error,
 ) {
 	return initTopic(&c.expirationCompletedTopic.topic).pub, nil
+}
+
+func (c *MockClient) ChargeCreatedConsumer(context.Context, streaming.ConsumeErrorHandler, string) (
+	streaming.ChargeCreatedConsumer,
+	error,
+) {
+	return initTopic(&c.chargeCreatedTopic.topic).sub, nil
+}
+
+func (c *MockClient) ChargeCreatedPublisher(context.Context) (
+	streaming.ChargeCreatedPublisher,
+	error,
+) {
+	return initTopic(&c.chargeCreatedTopic.topic).pub, nil
 }
 
 func initTopic[T any](topic *topic[T]) *topic[T] {
