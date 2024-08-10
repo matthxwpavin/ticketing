@@ -27,7 +27,7 @@ git commit -m "$commit_message"
 # Determine the new tag version
 if [ -z "$manual_version" ]; then
   # Get the latest tag
-  latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+  latest_tag=$(git tag -l "v*" --sort=-v:refname | head -n 1)
 
   # If there are no tags, start with v1.0.0
   if [ -z "$latest_tag" ]; then
