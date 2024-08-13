@@ -37,7 +37,7 @@ func (c *Client) TicketUpdatedPublisher(ctx context.Context) (
 	return createStreamIfNotExist[streaming.TicketUpdatedMessage](
 		ctx,
 		c.conn,
-		streaming.TicketCreatedStreamConfig,
+		streaming.TicketUpdatedStreamConfig,
 	)
 }
 
