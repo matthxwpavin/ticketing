@@ -1,71 +1,38 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"sync"
 )
 
-type Env struct {
-	jwtKey       string
-	mongoURI     string
-	natsURL      string
-	natsConnName string
-	dev          string
-}
+type EnvKey string
 
-var env Env
-
-var envMap = map[string]*string{
-	"JWT_KEY":        &env.jwtKey,
-	"MONGO_URI":      &env.mongoURI,
-	"NATS_URL":       &env.natsURL,
-	"NATS_CONN_NAME": &env.natsConnName,
-	"DEV":            &env.dev,
-}
-
-var once sync.Once
-
-// Load loads environment variables. It returns error if any
-// required one is missed.
-func Load() (err error) {
-	once.Do(func() {
-		for k, dst := range envMap {
-			if err = load(k, dst); err != nil {
-				break
-			}
-		}
-	})
-	return
-}
-
-func load(key string, dst *string) error {
-	if *dst = os.Getenv(key); *dst == "" {
-		return fmtError(key)
+func (e EnvKey) Require() error {
+	if _, ok := os.LookupEnv(string(e)); !ok {
+		return fmt.Errorf("env key require, key: %v", string(e))
 	}
 	return nil
 }
 
-func fmtError(envName string) error {
-	return fmt.Errorf("'%s', env. is required", envName)
+func (e EnvKey) Value() string {
+	return os.Getenv(string(e))
 }
 
-func JWTKey() string {
-	return env.jwtKey
+func CheckRequiredEnvs(envs []EnvKey) error {
+	var err error
+	for _, key := range envs {
+		err = errors.Join(err, key.Require())
+	}
+	return err
 }
 
-func MongoURI() string {
-	return env.mongoURI
-}
-
-func NatsURL() string {
-	return env.natsURL
-}
-
-func NatsConnectionName() string {
-	return env.natsConnName
-}
-
-func Dev() bool {
-	return env.dev == "dev"
-}
+const (
+	NatsURL      EnvKey = "NATS_URL"
+	NatsConnName EnvKey = "NATS_CONN_NAME"
+	DEV          EnvKey = "DEV"
+	JwtSecret    EnvKey = "JWT_KEY"
+	RedisHost    EnvKey = "REDIS_HOST"
+	MongoURI     EnvKey = "MONGO_URI"
+	StripeSecret EnvKey = "STRIPE_SECRET"
+)

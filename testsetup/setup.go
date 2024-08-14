@@ -9,13 +9,12 @@ import (
 	"time"
 
 	"github.com/matthxwpavin/ticketing/database/mongo"
-	"github.com/matthxwpavin/ticketing/env"
 	"github.com/matthxwpavin/ticketing/logging/sugar"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 )
 
-func Setup(m *testing.M, conf *mongo.DbConfig, initializer Initializer) {
+func Setup(m *testing.M, conf *mongo.DbConfig, onInit InitFunc) {
 	// call flag.Parse() here if TestMain uses flags
 
 	logger, err := sugar.New()
@@ -65,7 +64,7 @@ func Setup(m *testing.M, conf *mongo.DbConfig, initializer Initializer) {
 		}
 	}()
 
-	code, testErr := runTests(ctx, m, pool, resource, conf, initializer)
+	code, testErr := runTests(ctx, m, pool, resource, conf, onInit)
 	// You can't defer this because os.Exit doesn't care for defer
 	purge(ctx, pool, resource)
 
@@ -75,7 +74,7 @@ func Setup(m *testing.M, conf *mongo.DbConfig, initializer Initializer) {
 	os.Exit(code)
 }
 
-type Initializer func(context.Context, *mongo.DB) error
+type InitFunc func(context.Context, *mongo.DB) error
 
 // purge purges the resources (running container). It usually be called in the last
 // step of testing (before os.Exit with a code produced by Main.Run).
@@ -94,19 +93,11 @@ func runTests(
 	pool *dockertest.Pool,
 	resource *dockertest.Resource,
 	conf *mongo.DbConfig,
-	initializer Initializer,
+	onInit InitFunc,
 ) (int, error) {
 	logger := sugar.FromContext(ctx)
 
-	os.Setenv("JWT_KEY", "abcd")
 	os.Setenv("MONGO_URI", fmt.Sprintf("mongodb://localhost:%s", resource.GetPort("27017/tcp")))
-	os.Setenv("NATS_URL", "nats://localhost:4222")
-	os.Setenv("NATS_CONN_NAME", "some_name")
-	os.Setenv("DEV", "dev")
-	if err := env.Load(); err != nil {
-		logger.Errorw("unable to load ENV", "error", err)
-		return 0, err
-	}
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	var db *mongo.DB
@@ -115,7 +106,7 @@ func runTests(
 		defer cancel()
 
 		db = &mongo.DB{
-			URI:    env.MongoURI(),
+			URI:    fmt.Sprintf("mongodb://localhost:%s", resource.GetPort("27017/tcp")),
 			Config: *conf,
 		}
 		if err := db.Connect(connCtx); err != nil {
@@ -135,9 +126,11 @@ func runTests(
 	// Disconnect the database when main function returns.
 	defer db.Disconnect(ctx)
 
-	if err := initializer(ctx, db); err != nil {
-		logger.Errorw("could not initialize", "error", err)
-		return 0, err
+	if onInit != nil {
+		if err := onInit(ctx, db); err != nil {
+			logger.Errorw("could not initialize", "error", err)
+			return 0, err
+		}
 	}
 
 	// Start main test.

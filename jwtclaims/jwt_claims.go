@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/matthxwpavin/ticketing/env"
 )
 
 type jwtContextKey struct{}
@@ -72,5 +72,5 @@ func Parse(jwtStr string) (*CustomClaims, error) {
 }
 
 func jwtKeyFromEnv() string {
-	return os.Getenv("JWT_KEY")
+	return env.JwtSecret.Value()
 }

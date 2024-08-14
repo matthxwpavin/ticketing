@@ -53,11 +53,8 @@ type AckTopicsMessages struct {
 }
 
 func DefaultConsumeErrorHandler(ctx context.Context) ConsumeErrorHandler {
-	return func(unsubscribe Unsubscriber, err error) {
-		logger := sugar.FromContext(ctx)
-		logger.Errorf("could not consume, error: %v", err)
-		unsubscribe()
-		logger.Infoln("unsubscribed")
+	return func(_ Unsubscriber, err error) {
+		sugar.FromContext(ctx).Errorw("could not consume", "error", err)
 	}
 }
 

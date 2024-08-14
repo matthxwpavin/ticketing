@@ -21,8 +21,8 @@ type Client struct {
 // Not required to be a property due to there is no sub-type of the Client.
 func NewFromEnv(ctx context.Context, consumerName string) *Client {
 	return &Client{
-		URL:          env.NatsURL(),
-		Name:         env.NatsConnectionName(),
+		URL:          env.NatsURL.Value(),
+		Name:         env.NatsConnName.Value(),
 		ConsumerName: consumerName,
 	}
 }

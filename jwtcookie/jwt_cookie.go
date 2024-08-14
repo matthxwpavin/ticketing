@@ -13,7 +13,7 @@ func New(jwt string) *http.Cookie {
 		Name:     Name,
 		Value:    jwt,
 		Path:     "/",
-		Secure:   !env.Dev(),
+		Secure:   env.DEV.Value() != "dev",
 		HttpOnly: true,
 	}
 }
