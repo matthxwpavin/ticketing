@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/matthxwpavin/ticketing/env"
 )
 
 type jwtContextKey struct{}
@@ -50,12 +50,12 @@ func IssueToken(data Metadata) (string, error) {
 				// Audience:  []string{"somebody_else"},
 			},
 		},
-	).SignedString([]byte(env.JWTKey()))
+	).SignedString([]byte(jwtKeyFromEnv()))
 }
 
 func Parse(jwtStr string) (*CustomClaims, error) {
 	_, err := jwt.Parse(jwtStr, func(t *jwt.Token) (interface{}, error) {
-		return []byte(env.JWTKey()), nil
+		return []byte(jwtKeyFromEnv()), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	if err != nil {
 		return nil, err
@@ -69,4 +69,8 @@ func Parse(jwtStr string) (*CustomClaims, error) {
 
 	claims := new(CustomClaims)
 	return claims, json.Unmarshal(decoded, claims)
+}
+
+func jwtKeyFromEnv() string {
+	return os.Getenv("JWT_KEY")
 }

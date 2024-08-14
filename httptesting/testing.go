@@ -16,15 +16,15 @@ type Testing struct {
 	AfterRun AfterRunFunc
 }
 
-func (s Testing) After(afterRun AfterRunFunc) Testing {
+func (s *Testing) After(afterRun AfterRunFunc) *Testing {
 	s.AfterRun = afterRun
 	return s
 }
 
-func (s Testing) Run(t *testing.T) {
-	a := s.Specs
-	t.Run(a.Name, func(t *testing.T) {
-		r := a.TestingRequest(t)
+func (s *Testing) Run(t *testing.T) {
+	specs := s.Specs
+	t.Run(specs.Name, func(t *testing.T) {
+		r := specs.TestingRequest(t)
 		if r == nil {
 			t.Fatal("the testing request is nil")
 		}
@@ -33,14 +33,14 @@ func (s Testing) Run(t *testing.T) {
 		s.Handler.ServeHTTP(w, r)
 
 		rs := w.Result()
-		if a.StatusCodeFunc != nil {
-			if !a.StatusCodeFunc(rs.StatusCode) {
+		if specs.StatusCodeFunc != nil {
+			if !specs.StatusCodeFunc(rs.StatusCode) {
 				t.Fatalf("status code func returns false, got: %v", rs.StatusCode)
 			}
-		} else if a.StatusCode != 0 && rs.StatusCode != a.StatusCode {
+		} else if specs.StatusCode != 0 && rs.StatusCode != specs.StatusCode {
 			t.Fatalf(
 				"status code is unexpected, expected: %v, received: %v",
-				a.StatusCode,
+				specs.StatusCode,
 				rs.StatusCode,
 			)
 		}
@@ -67,14 +67,14 @@ func Prepare(handler http.Handler) *prepared {
 	return &prepared{handler: handler}
 }
 
-func (s *prepared) Testing(specs TestingSpecifications) Testing {
-	return Testing{
+func (s *prepared) Testing(specs TestingSpecifications) *Testing {
+	return &Testing{
 		Handler: s.handler,
 		Specs:   specs,
 	}
 }
 
-type TestingList []Testing
+type TestingList []*Testing
 
 func (l TestingList) Run(t *testing.T) {
 	for _, c := range l {
