@@ -81,6 +81,6 @@ var (
 	}
 	PaymentCreatedStreamConfig = &StreamConfig{
 		Name:     "payment:created",
-		Subjects: []string{},
+		Subjects: []string{"payment:created:1"},
 	}
 )
