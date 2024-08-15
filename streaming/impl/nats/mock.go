@@ -12,7 +12,7 @@ type MockClient struct {
 	orderCreatedTopic        orderCreatedTopic
 	orderCancelledTopic      orderCancelledTopic
 	expirationCompletedTopic expirationCompletedTopic
-	chargeCreatedTopic       chargeCreatedTopic
+	paymentCreatedTopic      paymentCreatedTopic
 }
 
 type topic[T any] struct {
@@ -41,7 +41,7 @@ type expirationCompletedTopic struct {
 	topic[streaming.ExpirationCompletedMessage]
 }
 
-type chargeCreatedTopic struct {
+type paymentCreatedTopic struct {
 	topic[streaming.PaymentCreatedMessage]
 }
 
@@ -152,14 +152,14 @@ func (c *MockClient) PaymentCreatedConsumer(context.Context, streaming.ConsumeEr
 	streaming.PaymentCreatedConsumer,
 	error,
 ) {
-	return initTopic(&c.chargeCreatedTopic.topic).sub, nil
+	return initTopic(&c.paymentCreatedTopic.topic).sub, nil
 }
 
 func (c *MockClient) PaymentCreatedPublisher(context.Context) (
 	streaming.PaymentCreatedPublisher,
 	error,
 ) {
-	return initTopic(&c.chargeCreatedTopic.topic).pub, nil
+	return initTopic(&c.paymentCreatedTopic.topic).pub, nil
 }
 
 func initTopic[T any](topic *topic[T]) *topic[T] {
