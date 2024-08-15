@@ -79,8 +79,8 @@ var (
 		Name:     "expiration:completed",
 		Subjects: []string{"expiration:completed:1"},
 	}
-	ChargeCreatedStreamConfig = &StreamConfig{
-		Name:     "charge:created",
+	PaymentCreatedStreamConfig = &StreamConfig{
+		Name:     "payment:created",
 		Subjects: []string{},
 	}
 )

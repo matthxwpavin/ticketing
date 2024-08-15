@@ -7,28 +7,28 @@ import (
 )
 
 func (c *Client) ChargeCreatedPublisher(ctx context.Context) (
-	streaming.ChargeCreatedPublisher,
+	streaming.PaymentCreatedPublisher,
 	error,
 ) {
-	return createStreamIfNotExist[streaming.ChargeCreatedMessage](
+	return createStreamIfNotExist[streaming.PaymentCreatedMessage](
 		ctx,
 		c.conn,
-		streaming.ChargeCreatedStreamConfig,
+		streaming.PaymentCreatedStreamConfig,
 	)
 }
 
-func (c *Client) ChargeCreatedConsumer(
+func (c *Client) PaymentCreatedConsumer(
 	ctx context.Context,
 	errHandler streaming.ConsumeErrorHandler,
 	filterSubject string,
 ) (
-	streaming.ChargeCreatedConsumer,
+	streaming.PaymentCreatedConsumer,
 	error,
 ) {
-	return consumer[streaming.ChargeCreatedMessage](
+	return consumer[streaming.PaymentCreatedMessage](
 		ctx,
 		c,
-		streaming.ChargeCreatedStreamConfig,
+		streaming.PaymentCreatedStreamConfig,
 		errHandler,
 		filterSubject,
 	)

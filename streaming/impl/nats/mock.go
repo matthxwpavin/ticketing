@@ -42,7 +42,7 @@ type expirationCompletedTopic struct {
 }
 
 type chargeCreatedTopic struct {
-	topic[streaming.ChargeCreatedMessage]
+	topic[streaming.PaymentCreatedMessage]
 }
 
 func didAck[T any](msgCh <-chan *streaming.AcknowledgeMessage[T]) bool {
@@ -149,14 +149,14 @@ func (c *MockClient) ExpirationCompletedPublisher(context.Context) (
 }
 
 func (c *MockClient) ChargeCreatedConsumer(context.Context, streaming.ConsumeErrorHandler, string) (
-	streaming.ChargeCreatedConsumer,
+	streaming.PaymentCreatedConsumer,
 	error,
 ) {
 	return initTopic(&c.chargeCreatedTopic.topic).sub, nil
 }
 
 func (c *MockClient) ChargeCreatedPublisher(context.Context) (
-	streaming.ChargeCreatedPublisher,
+	streaming.PaymentCreatedPublisher,
 	error,
 ) {
 	return initTopic(&c.chargeCreatedTopic.topic).pub, nil
