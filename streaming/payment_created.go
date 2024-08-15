@@ -9,4 +9,7 @@ type PaymentCreatedConsumer interface {
 }
 
 type PaymentCreatedMessage struct {
+	PaymentId             string
+	OrderId               string
+	StripePaymentIntentId string
 }
