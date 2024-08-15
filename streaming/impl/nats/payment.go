@@ -6,7 +6,7 @@ import (
 	"github.com/matthxwpavin/ticketing/streaming"
 )
 
-func (c *Client) ChargeCreatedPublisher(ctx context.Context) (
+func (c *Client) PaymentCreatedPublisher(ctx context.Context) (
 	streaming.PaymentCreatedPublisher,
 	error,
 ) {

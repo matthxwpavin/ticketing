@@ -148,14 +148,14 @@ func (c *MockClient) ExpirationCompletedPublisher(context.Context) (
 	return initTopic(&c.expirationCompletedTopic.topic).pub, nil
 }
 
-func (c *MockClient) ChargeCreatedConsumer(context.Context, streaming.ConsumeErrorHandler, string) (
+func (c *MockClient) PaymentCreatedConsumer(context.Context, streaming.ConsumeErrorHandler, string) (
 	streaming.PaymentCreatedConsumer,
 	error,
 ) {
 	return initTopic(&c.chargeCreatedTopic.topic).sub, nil
 }
 
-func (c *MockClient) ChargeCreatedPublisher(context.Context) (
+func (c *MockClient) PaymentCreatedPublisher(context.Context) (
 	streaming.PaymentCreatedPublisher,
 	error,
 ) {
