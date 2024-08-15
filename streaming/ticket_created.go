@@ -9,9 +9,9 @@ type TicketCreatedConsumer interface {
 }
 
 type TicketCreatedMessage struct {
-	TicketID      string  `json:"ticketID"`
-	TicketTitle   string  `json:"ticketTitle"`
-	TicketPrice   float64 `json:"ticketPrice"`
-	UserID        string  `json:"userID"`
-	TicketVersion int32   `json:"ticketVersion"`
+	TicketID      string `json:"ticketID"`
+	TicketTitle   string `json:"ticketTitle"`
+	TicketPrice   int32  `json:"ticketPrice"`
+	UserID        string `json:"userID"`
+	TicketVersion int32  `json:"ticketVersion"`
 }

@@ -18,8 +18,8 @@ type OrderCreatedMessage struct {
 	OrderVersion   int32     `json:"version"`
 	OrderExpiresAt time.Time `json:"expiresAt"`
 	Ticket         struct {
-		Id    string  `json:"id"`
-		Price float64 `json:"price"`
+		Id    string `json:"id"`
+		Price int32  `json:"price"`
 	} `json:"ticket"`
 	OrderUserId string `json:"user_id"`
 }
