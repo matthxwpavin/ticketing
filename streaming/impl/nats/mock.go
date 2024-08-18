@@ -16,9 +16,10 @@ type MockClient struct {
 }
 
 type topic[T any] struct {
-	msg chan *streaming.AcknowledgeMessage[T]
-	pub streaming.Publisher[T]
-	sub streaming.JsonConsumer[T]
+	msg        chan *streaming.AcknowledgeMessage[T]
+	pub        streaming.Publisher[T]
+	sub        streaming.JsonConsumer[T]
+	didPublish bool
 }
 
 type ticketCreatedTopic struct {
@@ -76,6 +77,10 @@ func (c *MockClient) DidOrderCancelledMessageAck() bool {
 
 func (c *MockClient) DidExpirationCompletedMessageAck() bool {
 	return didAck(c.expirationCompletedTopic.msg)
+}
+
+func (c *MockClient) DidExpirationCompletedMessagePublish() bool {
+	return c.expirationCompletedTopic.didPublish
 }
 
 func (c *MockClient) TicketCreatedPublisher(context.Context) (
@@ -186,6 +191,7 @@ type mockJetStream[T any] struct {
 
 func (mjs *mockJetStream[T]) Publish(_ context.Context, msg *T) error {
 	mjs.topic.msg <- &streaming.AcknowledgeMessage[T]{Message: msg}
+	mjs.topic.didPublish = true
 	return nil
 }
 
