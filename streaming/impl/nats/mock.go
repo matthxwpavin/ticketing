@@ -174,7 +174,8 @@ func initTopic[T any](topic *topic[T]) *topic[T] {
 		}
 	}
 	if topic.msg == nil {
-		topic.msg = make(chan *streaming.AcknowledgeMessage[T], 1)
+		const bufferCount = 100000 // This work around from testing which has no consumers.
+		topic.msg = make(chan *streaming.AcknowledgeMessage[T], bufferCount)
 	}
 	return topic
 }
